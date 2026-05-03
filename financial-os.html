@@ -1477,15 +1477,8 @@
             localStorage.setItem('financialOS', JSON.stringify(financialData));
             console.log('Data saved to localStorage');
             
-            // Trigger GitHub sync if connected
-            if (typeof githubToken !== 'undefined' && githubToken && gistId) {
-                clearTimeout(window.syncTimeout);
-                window.syncTimeout = setTimeout(() => {
-                    if (typeof pushToGist === 'function') {
-                        pushToGist();
-                    }
-                }, 1000);
-            }
+            // DO NOT auto-sync - user must manually push
+            console.log('ℹ️ Data saved locally. Click PUSH to sync to GitHub.');
         }
 
         // Tab switching
@@ -2341,8 +2334,8 @@
                 pullBtn.style.display = 'inline-block';
                 updateSyncStatus('Connected');
                 
-                // Pull latest data on startup
-                pullFromGist();
+                // DO NOT auto-pull on startup - let user manually sync
+                console.log('ℹ️ Connected but not auto-syncing. Use Pull/Push buttons.');
             } else if (!githubToken && connectBtn && syncBtn && pullBtn) {
                 console.log('❌ No token - showing connect button');
                 connectBtn.style.display = 'inline-block';
