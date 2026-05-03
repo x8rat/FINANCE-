@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Operating System</title>
+    <!-- Version: 2.0 - Fixed Save Functions + GitHub Sync -->
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Archivo+Black&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -1447,7 +1448,9 @@
         }
 
         function saveData() {
+            console.log('saveData called, saving:', financialData);
             localStorage.setItem('financialOS', JSON.stringify(financialData));
+            console.log('Data saved to localStorage');
             
             // Trigger GitHub sync if connected
             if (typeof githubToken !== 'undefined' && githubToken && gistId) {
@@ -2117,23 +2120,51 @@
 
         // Modal save functions
         function saveCash() {
-            const newCash = parseFloat(document.getElementById('editCash').value);
-            if (newCash >= 0) {
-                financialData.cash = newCash;
-                saveData();
-                updateAllDisplays();
-                closeModal('cashModal');
+            const inputValue = document.getElementById('editCash').value;
+            const newCash = parseFloat(inputValue);
+            
+            console.log('saveCash called:', inputValue, newCash);
+            
+            if (isNaN(newCash)) {
+                alert('Please enter a valid number');
+                return;
             }
+            
+            if (newCash < 0) {
+                alert('Cash cannot be negative');
+                return;
+            }
+            
+            financialData.cash = newCash;
+            saveData();
+            updateAllDisplays();
+            closeModal('cashModal');
+            
+            console.log('Cash saved successfully:', financialData.cash);
         }
 
         function saveSavings() {
-            const newSavings = parseFloat(document.getElementById('editSavings').value);
-            if (newSavings >= 0) {
-                financialData.savings = newSavings;
-                saveData();
-                updateAllDisplays();
-                closeModal('savingsModal');
+            const inputValue = document.getElementById('editSavings').value;
+            const newSavings = parseFloat(inputValue);
+            
+            console.log('saveSavings called:', inputValue, newSavings);
+            
+            if (isNaN(newSavings)) {
+                alert('Please enter a valid number');
+                return;
             }
+            
+            if (newSavings < 0) {
+                alert('Savings cannot be negative');
+                return;
+            }
+            
+            financialData.savings = newSavings;
+            saveData();
+            updateAllDisplays();
+            closeModal('savingsModal');
+            
+            console.log('Savings saved successfully:', financialData.savings);
         }
 
         // Settings functions
@@ -2409,8 +2440,5 @@
         // Integrate GitHub sync into saveData
         // (Original saveData is in the main script section)
     </script>
-
-    <script>
-        // MAIN APP CODE
-        // Core Data Structure</body>
+</body>
 </html>
