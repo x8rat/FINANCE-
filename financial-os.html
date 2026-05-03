@@ -2628,7 +2628,63 @@
         function manualPull() {
             console.log('Manual pull triggered');
             updateSyncStatus('Pulling...');
-            pullFromGist();
+            forcePullFromGist(); // Use a force pull that never pushes
+        }
+        
+        async function forcePullFromGist() {
+            if (!githubToken || !gistId) {
+                console.log('⚠️ Pull skipped - missing token or gist ID');
+                return;
+            }
+            
+            console.log('📥 FORCE Pulling from GitHub Gist (will not push)...');
+            console.log('Gist ID:', gistId);
+            
+            try {
+                const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+                    headers: {
+                        'Authorization': `token ${githubToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                console.log('Pull response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error('Pull failed with status: ' + response.status);
+                }
+                
+                const gist = await response.json();
+                console.log('Gist fetched:', gist.id);
+                
+                if (!gist.files || !gist.files['financial-data.json']) {
+                    console.log('❌ No financial-data.json in gist');
+                    updateSyncStatus('No data found');
+                    return;
+                }
+                
+                const content = gist.files['financial-data.json'].content;
+                const remoteData = JSON.parse(content);
+                
+                console.log('Remote data parsed successfully');
+                console.log('Remote cash:', remoteData.cash);
+                console.log('Local cash:', financialData.cash);
+                console.log('Remote version:', remoteData.version || 0);
+                console.log('Local version:', financialData.version || 0);
+                
+                // ALWAYS use remote data on manual pull
+                console.log('✅ Forcing remote data (manual pull)');
+                financialData = remoteData;
+                localStorage.setItem('financialOS', JSON.stringify(financialData));
+                updateAllDisplays();
+                updateSyncStatus('Pulled ✓');
+                setTimeout(() => updateSyncStatus('Connected'), 2000);
+                console.log('Data updated! New cash:', financialData.cash);
+                
+            } catch (error) {
+                console.error('❌ Pull error:', error);
+                updateSyncStatus('Pull failed');
+            }
         }
         
         function updateSyncStatus(status) {
