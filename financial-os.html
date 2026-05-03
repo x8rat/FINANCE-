@@ -1324,6 +1324,17 @@
             </div>
             <button onclick="testStorage()" class="secondary" style="width: 100%; margin-bottom: 1rem; font-size: 0.8rem;">🔍 Test Storage</button>
             
+            <!-- Fix Gist ID -->
+            <div style="background: rgba(255, 51, 102, 0.1); border: 1px solid var(--accent-red); padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                ⚠️ <strong>Devices not syncing?</strong><br>
+                Copy the Gist ID from your other device and paste it here:
+            </div>
+            <div class="input-group">
+                <label>Gist ID (optional - to fix sync issues)</label>
+                <input type="text" id="fixGistId" placeholder="1da1da1effb209dde9bb43562f52b7c6" style="font-family: monospace; font-size: 0.8rem;" />
+            </div>
+            <button onclick="fixGistId()" class="secondary" style="width: 100%; margin-bottom: 1rem; font-size: 0.8rem;">🔧 Use This Gist ID</button>
+            
             <div class="modal-actions">
                 <button class="secondary" onclick="closeModal('githubSetupModal')">Cancel</button>
                 <button onclick="saveGitHubToken()">Connect</button>
@@ -2402,6 +2413,30 @@
             message += 'Gist ID: ' + (gist ? '✅ Saved' : '❌ None') + '<br>';
             
             status.innerHTML = message;
+        }
+        
+        function fixGistId() {
+            const newGistId = document.getElementById('fixGistId').value.trim();
+            
+            if (!newGistId) {
+                alert('❌ Please enter a Gist ID');
+                return;
+            }
+            
+            if (newGistId.length < 20) {
+                alert('❌ Invalid Gist ID (too short)');
+                return;
+            }
+            
+            console.log('🔧 Fixing Gist ID...');
+            console.log('Old Gist ID:', localStorage.getItem('gist_id'));
+            console.log('New Gist ID:', newGistId);
+            
+            localStorage.setItem('gist_id', newGistId);
+            gistId = newGistId;
+            
+            alert('✅ Gist ID updated! The page will reload.');
+            location.reload();
         }
         
         async function saveGitHubToken() {
