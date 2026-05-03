@@ -1583,58 +1583,84 @@
 
         // Update all displays
         function updateAllDisplays() {
-            // Dashboard
-            document.getElementById('dashCash').textContent = financialData.cash.toLocaleString();
-            document.getElementById('dashSavings').textContent = financialData.savings.toLocaleString();
-            document.getElementById('dashDebt').textContent = financialData.loanCurrent.toLocaleString();
-            
-            // Update subscription costs in RON using live rates
-            if (financialData.market.eurRon && financialData.market.usdRon) {
-                const claudeProRon = Math.round(21 * financialData.market.eurRon);
-                const clo3dRon = Math.round(57 * financialData.market.usdRon);
-                const totalSubs = claudeProRon + clo3dRon;
+            try {
+                // Dashboard - with null checks
+                const dashCash = document.getElementById('dashCash');
+                const dashSavings = document.getElementById('dashSavings');
+                const dashDebt = document.getElementById('dashDebt');
                 
-                document.getElementById('claudeProRon').textContent = '~' + claudeProRon;
-                document.getElementById('clo3dRon').textContent = '~' + clo3dRon;
-                document.getElementById('totalSubsRon').textContent = '~' + totalSubs + ' RON/mo';
+                if (dashCash) dashCash.textContent = financialData.cash.toLocaleString();
+                if (dashSavings) dashSavings.textContent = financialData.savings.toLocaleString();
+                if (dashDebt) dashDebt.textContent = financialData.loanCurrent.toLocaleString();
+                
+                // Update subscription costs in RON using live rates
+                if (financialData.market.eurRon && financialData.market.usdRon) {
+                    const claudeProRon = Math.round(21 * financialData.market.eurRon);
+                    const clo3dRon = Math.round(57 * financialData.market.usdRon);
+                    const totalSubs = claudeProRon + clo3dRon;
+                    
+                    const claudeProRonEl = document.getElementById('claudeProRon');
+                    const clo3dRonEl = document.getElementById('clo3dRon');
+                    const totalSubsRonEl = document.getElementById('totalSubsRon');
+                    
+                    if (claudeProRonEl) claudeProRonEl.textContent = '~' + claudeProRon;
+                    if (clo3dRonEl) clo3dRonEl.textContent = '~' + clo3dRon;
+                    if (totalSubsRonEl) totalSubsRonEl.textContent = '~' + totalSubs + ' RON/mo';
+                }
+                
+                const cs2Value = financialData.cs2Portfolio.reduce((sum, item) => sum + (item.currentValue || 0), 0);
+                const dashCS2Value = document.getElementById('dashCS2Value');
+                const dashCS2Items = document.getElementById('dashCS2Items');
+                
+                if (dashCS2Value) dashCS2Value.textContent = cs2Value.toLocaleString();
+                if (dashCS2Items) dashCS2Items.textContent = financialData.cs2Portfolio.length;
+                
+                const netWorth = calculateNetWorth();
+                const dashNetWorth = document.getElementById('dashNetWorth');
+                
+                if (dashNetWorth) {
+                    dashNetWorth.textContent = netWorth.toLocaleString();
+                    dashNetWorth.className = 'card-value ' + (netWorth >= 0 ? 'green' : 'red');
+                    
+                    // Update net worth explanation
+                    const netWorthCard = dashNetWorth.parentElement;
+                    if (netWorthCard) {
+                        const explanation = netWorthCard.querySelector('div[style*="font-size: 0.8rem"]');
+                        if (explanation) {
+                            explanation.textContent = `Cash (${financialData.cash}) + Savings (${financialData.savings}) + CS2 (${cs2Value.toFixed(0)}) - Loan (${financialData.loanCurrent.toLocaleString()})`;
+                        }
+                    }
+                }
+                
+                // Gas
+                const gasLevel = document.getElementById('gasLevel');
+                const gasBar = document.getElementById('gasBar');
+                
+                if (gasLevel) gasLevel.textContent = financialData.gasTank.currentPercent + '%';
+                if (gasBar) {
+                    gasBar.style.width = financialData.gasTank.currentPercent + '%';
+                    
+                    // Change gas bar color based on level
+                    if (financialData.gasTank.currentPercent <= 20) {
+                        gasBar.style.background = 'var(--accent-red)';
+                    } else if (financialData.gasTank.currentPercent <= 50) {
+                        gasBar.style.background = 'var(--accent-yellow)';
+                    } else {
+                        gasBar.style.background = 'var(--accent)';
+                    }
+                }
+                
+                const currentGasPrice = document.getElementById('currentGasPrice');
+                if (currentGasPrice) currentGasPrice.textContent = financialData.market.gasPrice.toFixed(2);
+                
+                // Progress
+                updateProgressDisplay();
+                updateMarketTicker();
+                updateTransactionLists();
+                updateCS2Holdings();
+            } catch (error) {
+                console.error('Error in updateAllDisplays:', error);
             }
-            
-            const cs2Value = financialData.cs2Portfolio.reduce((sum, item) => sum + (item.currentValue || 0), 0);
-            document.getElementById('dashCS2Value').textContent = cs2Value.toLocaleString();
-            document.getElementById('dashCS2Items').textContent = financialData.cs2Portfolio.length;
-            
-            const netWorth = calculateNetWorth();
-            document.getElementById('dashNetWorth').textContent = netWorth.toLocaleString();
-            document.getElementById('dashNetWorth').className = 'card-value ' + (netWorth >= 0 ? 'green' : 'red');
-            
-            // Update net worth explanation
-            const netWorthCard = document.getElementById('dashNetWorth').parentElement;
-            const explanation = netWorthCard.querySelector('div[style*="font-size: 0.8rem"]');
-            if (explanation) {
-                explanation.textContent = `Cash (${financialData.cash}) + Savings (${financialData.savings}) + CS2 (${cs2Value.toFixed(0)}) - Loan (${financialData.loanCurrent.toLocaleString()})`;
-            }
-            
-            // Gas
-            document.getElementById('gasLevel').textContent = financialData.gasTank.currentPercent + '%';
-            document.getElementById('gasBar').style.width = financialData.gasTank.currentPercent + '%';
-            
-            // Change gas bar color based on level
-            const gasBar = document.getElementById('gasBar');
-            if (financialData.gasTank.currentPercent <= 20) {
-                gasBar.style.background = 'var(--accent-red)';
-            } else if (financialData.gasTank.currentPercent <= 50) {
-                gasBar.style.background = 'var(--accent-yellow)';
-            } else {
-                gasBar.style.background = 'var(--accent)';
-            }
-            
-            document.getElementById('currentGasPrice').textContent = financialData.market.gasPrice.toFixed(2);
-            
-            // Progress
-            updateProgressDisplay();
-            updateMarketTicker();
-            updateTransactionLists();
-            updateCS2Holdings();
         }
 
         // Initialize
@@ -1880,34 +1906,41 @@
                 return;
             }
 
-            // Calculate new tank level
-            const currentLiters = (financialData.gasTank.currentPercent / 100) * financialData.gasTank.capacity;
-            const newLiters = Math.min(currentLiters + liters, financialData.gasTank.capacity);
-            financialData.gasTank.currentPercent = Math.round((newLiters / financialData.gasTank.capacity) * 100);
-            financialData.gasTank.fillsThisMonth++;
+            try {
+                // Calculate new tank level
+                const currentLiters = (financialData.gasTank.currentPercent / 100) * financialData.gasTank.capacity;
+                const newLiters = Math.min(currentLiters + liters, financialData.gasTank.capacity);
+                financialData.gasTank.currentPercent = Math.round((newLiters / financialData.gasTank.capacity) * 100);
+                financialData.gasTank.fillsThisMonth++;
 
-            // Record as expense
-            financialData.transactions.push({
-                id: Date.now(),
-                type: 'expense',
-                category: 'gas',
-                amount: cost,
-                description: `Gas fill-up: ${liters}L @ ${financialData.market.gasPrice.toFixed(2)} RON/L`,
-                paymentMethod: 'card',
-                date: new Date().toISOString(),
-                timestamp: Date.now()
-            });
+                // Record as expense
+                financialData.transactions.push({
+                    id: Date.now(),
+                    type: 'expense',
+                    category: 'gas',
+                    amount: cost,
+                    description: `Gas fill-up: ${liters}L @ ${financialData.market.gasPrice.toFixed(2)} RON/L`,
+                    paymentMethod: 'card',
+                    date: new Date().toISOString(),
+                    timestamp: Date.now()
+                });
 
-            // Deduct from cash
-            financialData.cash -= cost;
+                // Deduct from cash
+                financialData.cash -= cost;
 
-            addXP(5, 'Tracked gas fill-up');
-            saveData();
-            updateAllDisplays();
-            updateTransactionLists();
-            closeModal('gasModal');
-
-            alert(`✅ Gas fill-up recorded: ${liters}L for ${cost.toFixed(2)} RON`);
+                addXP(5, 'Tracked gas fill-up');
+                saveData();
+                updateAllDisplays();
+                updateTransactionLists();
+                
+                alert(`✅ Gas fill-up recorded: ${liters}L for ${cost.toFixed(2)} RON`);
+            } catch (error) {
+                console.error('Error filling gas:', error);
+                alert('❌ Error recording gas fill-up. Check console for details.');
+            } finally {
+                // Always close modal
+                closeModal('gasModal');
+            }
         }
 
         // Update transaction lists
@@ -2135,12 +2168,17 @@
                 return;
             }
             
-            financialData.cash = newCash;
-            saveData();
-            updateAllDisplays();
-            closeModal('cashModal');
-            
-            console.log('Cash saved successfully:', financialData.cash);
+            try {
+                financialData.cash = newCash;
+                saveData();
+                updateAllDisplays();
+                console.log('Cash saved successfully:', financialData.cash);
+            } catch (error) {
+                console.error('Error saving cash:', error);
+            } finally {
+                // Always close modal, even if there's an error
+                closeModal('cashModal');
+            }
         }
 
         function saveSavings() {
@@ -2159,12 +2197,17 @@
                 return;
             }
             
-            financialData.savings = newSavings;
-            saveData();
-            updateAllDisplays();
-            closeModal('savingsModal');
-            
-            console.log('Savings saved successfully:', financialData.savings);
+            try {
+                financialData.savings = newSavings;
+                saveData();
+                updateAllDisplays();
+                console.log('Savings saved successfully:', financialData.savings);
+            } catch (error) {
+                console.error('Error saving savings:', error);
+            } finally {
+                // Always close modal, even if there's an error
+                closeModal('savingsModal');
+            }
         }
 
         // Settings functions
@@ -2247,13 +2290,21 @@
         let isSyncing = false;
         
         function checkGitHubConnection() {
+            console.log('=== Checking GitHub Connection ===');
             githubToken = localStorage.getItem('github_token');
             gistId = localStorage.getItem('gist_id');
+            
+            console.log('Token from localStorage:', githubToken ? 'EXISTS (length: ' + githubToken.length + ')' : 'NULL');
+            console.log('Gist ID from localStorage:', gistId ? 'EXISTS' : 'NULL');
             
             const connectBtn = document.getElementById('githubConnectBtn');
             const syncBtn = document.getElementById('manualSyncBtn');
             
+            console.log('Connect button exists:', !!connectBtn);
+            console.log('Sync button exists:', !!syncBtn);
+            
             if (githubToken && connectBtn && syncBtn) {
+                console.log('✅ Token found - showing sync button');
                 connectBtn.style.display = 'none';
                 syncBtn.style.display = 'inline-block';
                 updateSyncStatus('Connected');
@@ -2261,9 +2312,13 @@
                 // Pull latest data on startup
                 pullFromGist();
             } else if (!githubToken && connectBtn && syncBtn) {
+                console.log('❌ No token - showing connect button');
                 connectBtn.style.display = 'inline-block';
                 syncBtn.style.display = 'none';
                 updateSyncStatus('Not synced');
+            } else {
+                console.log('⚠️ Buttons not ready yet, retrying in 1 second...');
+                setTimeout(checkGitHubConnection, 1000);
             }
         }
         
@@ -2273,6 +2328,10 @@
         
         async function saveGitHubToken() {
             const token = document.getElementById('githubToken').value.trim();
+            
+            console.log('=== Saving GitHub Token ===');
+            console.log('Token length:', token.length);
+            console.log('Starts with ghp_:', token.startsWith('ghp_'));
             
             if (!token || !token.startsWith('ghp_')) {
                 alert('❌ Invalid token. Must start with ghp_');
@@ -2290,13 +2349,18 @@
                     }
                 });
                 
+                console.log('Token test response status:', response.status);
+                
                 if (!response.ok) {
                     throw new Error('Invalid token');
                 }
                 
                 // Token works! Save it
+                console.log('✅ Token valid, saving to localStorage...');
                 localStorage.setItem('github_token', token);
                 githubToken = token;
+                
+                console.log('Verifying save - reading back:', localStorage.getItem('github_token') ? 'SUCCESS' : 'FAILED');
                 
                 // Create initial gist
                 await createGist();
@@ -2311,7 +2375,7 @@
             } catch (error) {
                 updateSyncStatus('Connection failed');
                 alert('❌ Failed to connect. Check your token and try again.');
-                console.error(error);
+                console.error('Token save error:', error);
             }
         }
         
