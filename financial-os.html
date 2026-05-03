@@ -1468,8 +1468,11 @@
         function saveData() {
             console.log('saveData called, saving:', financialData);
             
-            // Add timestamp to track which version is newest
+            // Increment version number for proper sync tracking
+            financialData.version = (financialData.version || 0) + 1;
             financialData.lastUpdate = Date.now();
+            
+            console.log('Version:', financialData.version, 'Timestamp:', financialData.lastUpdate);
             
             localStorage.setItem('financialOS', JSON.stringify(financialData));
             console.log('Data saved to localStorage');
@@ -2589,25 +2592,27 @@
                 console.log('Remote cash:', remoteData.cash);
                 console.log('Local cash:', financialData.cash);
                 
-                // Get last update timestamps
-                const localTimestamp = financialData.lastUpdate || 0;
-                const remoteTimestamp = remoteData.lastUpdate || 0;
+                // Get version numbers (more reliable than timestamps)
+                const localVersion = financialData.version || 0;
+                const remoteVersion = remoteData.version || 0;
                 
-                console.log('Local timestamp:', localTimestamp, new Date(localTimestamp).toLocaleString());
-                console.log('Remote timestamp:', remoteTimestamp, new Date(remoteTimestamp).toLocaleString());
+                console.log('Local version:', localVersion);
+                console.log('Remote version:', remoteVersion);
+                console.log('Local timestamp:', financialData.lastUpdate || 0, new Date(financialData.lastUpdate || 0).toLocaleString());
+                console.log('Remote timestamp:', remoteData.lastUpdate || 0, new Date(remoteData.lastUpdate || 0).toLocaleString());
                 
-                // Use whichever is newer
-                if (remoteTimestamp > localTimestamp) {
-                    console.log('✅ Remote is newer - pulling data');
+                // Use whichever has higher version number
+                if (remoteVersion > localVersion) {
+                    console.log('✅ Remote version is newer (v' + remoteVersion + ' > v' + localVersion + ') - pulling data');
                     financialData = remoteData;
                     localStorage.setItem('financialOS', JSON.stringify(financialData));
                     updateAllDisplays();
                     console.log('Data updated! New cash:', financialData.cash);
-                } else if (localTimestamp > remoteTimestamp) {
-                    console.log('ℹ️ Local is newer - pushing to remote');
+                } else if (localVersion > remoteVersion) {
+                    console.log('⬆️ Local version is newer (v' + localVersion + ' > v' + remoteVersion + ') - pushing to remote');
                     pushToGist(); // Push our newer data
                 } else {
-                    console.log('ℹ️ Local and remote are in sync');
+                    console.log('ℹ️ Local and remote are in sync (both v' + localVersion + ')');
                 }
                 
             } catch (error) {
