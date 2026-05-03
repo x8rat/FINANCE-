@@ -1302,9 +1302,16 @@
                 <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="font-family: monospace;" />
             </div>
             
-            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.5rem;">
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.5rem; margin-bottom: 1rem;">
                 🔒 Token is stored encrypted locally on your device only
             </div>
+            
+            <!-- Storage Diagnostic -->
+            <div id="storageDiagnostic" style="font-size: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border: 1px solid var(--border); margin-bottom: 1rem; display: none;">
+                <strong>Storage Status:</strong><br>
+                <span id="storageStatus"></span>
+            </div>
+            <button onclick="testStorage()" class="secondary" style="width: 100%; margin-bottom: 1rem; font-size: 0.8rem;">🔍 Test Storage</button>
             
             <div class="modal-actions">
                 <button class="secondary" onclick="closeModal('githubSetupModal')">Cancel</button>
@@ -2295,11 +2302,15 @@
         
         function checkGitHubConnection() {
             console.log('=== Checking GitHub Connection ===');
-            githubToken = localStorage.getItem('github_token');
+            
+            // Try multiple storage locations (for mobile compatibility)
+            githubToken = localStorage.getItem('github_token') 
+                       || localStorage.getItem('github_token_backup')
+                       || sessionStorage.getItem('github_token');
             gistId = localStorage.getItem('gist_id');
             
             console.log('Token from localStorage:', githubToken ? 'EXISTS (length: ' + githubToken.length + ')' : 'NULL');
-            console.log('Gist ID from localStorage:', gistId ? 'EXISTS' : 'NULL');
+            console.log('Gist ID from localStorage:', gistId ? 'EXISTS (' + gistId + ')' : 'NULL');
             
             const connectBtn = document.getElementById('githubConnectBtn');
             const syncBtn = document.getElementById('manualSyncBtn');
@@ -2328,6 +2339,58 @@
         
         function openGitHubSetup() {
             document.getElementById('githubSetupModal').classList.add('active');
+        }
+        
+        function testStorage() {
+            const diagnostic = document.getElementById('storageDiagnostic');
+            const status = document.getElementById('storageStatus');
+            
+            diagnostic.style.display = 'block';
+            
+            let message = '';
+            
+            // Test localStorage
+            try {
+                localStorage.setItem('test', 'test');
+                const result = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                if (result === 'test') {
+                    message += '✅ localStorage: Working<br>';
+                } else {
+                    message += '❌ localStorage: Read failed<br>';
+                }
+            } catch (e) {
+                message += '❌ localStorage: ' + e.message + '<br>';
+            }
+            
+            // Test sessionStorage
+            try {
+                sessionStorage.setItem('test', 'test');
+                const result = sessionStorage.getItem('test');
+                sessionStorage.removeItem('test');
+                
+                if (result === 'test') {
+                    message += '✅ sessionStorage: Working<br>';
+                } else {
+                    message += '❌ sessionStorage: Read failed<br>';
+                }
+            } catch (e) {
+                message += '❌ sessionStorage: ' + e.message + '<br>';
+            }
+            
+            // Check if in private mode
+            message += '<br><strong>Browser Info:</strong><br>';
+            message += 'User Agent: ' + navigator.userAgent.substring(0, 50) + '...<br>';
+            
+            // Check existing tokens
+            const token = localStorage.getItem('github_token');
+            const gist = localStorage.getItem('gist_id');
+            message += '<br><strong>Current Data:</strong><br>';
+            message += 'Token: ' + (token ? '✅ Saved' : '❌ None') + '<br>';
+            message += 'Gist ID: ' + (gist ? '✅ Saved' : '❌ None') + '<br>';
+            
+            status.innerHTML = message;
         }
         
         async function saveGitHubToken() {
@@ -2359,9 +2422,18 @@
                     throw new Error('Invalid token');
                 }
                 
-                // Token works! Save it
+                // Token works! Save it MULTIPLE ways for mobile compatibility
                 console.log('✅ Token valid, saving to localStorage...');
-                localStorage.setItem('github_token', token);
+                
+                try {
+                    localStorage.setItem('github_token', token);
+                    localStorage.setItem('github_token_backup', token); // Backup
+                    sessionStorage.setItem('github_token', token); // Also in session
+                } catch (storageError) {
+                    console.error('Storage error:', storageError);
+                    alert('⚠️ Storage may be disabled. Token might not persist.');
+                }
+                
                 githubToken = token;
                 
                 console.log('Verifying save - reading back:', localStorage.getItem('github_token') ? 'SUCCESS' : 'FAILED');
@@ -2374,7 +2446,7 @@
                 document.getElementById('manualSyncBtn').style.display = 'inline-block';
                 updateSyncStatus('Connected ✓');
                 
-                alert('✅ GitHub connected! Your data will now sync across devices.');
+                alert('✅ GitHub connected! Your data will now sync across devices.\n\nIMPORTANT: Do NOT use Private/Incognito mode or the connection will be lost.');
                 
             } catch (error) {
                 updateSyncStatus('Connection failed');
