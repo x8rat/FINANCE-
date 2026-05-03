@@ -669,33 +669,38 @@
                 padding: 0.5rem 0;
                 font-size: 0.85rem;
             }
+            
+            /* GitHub sync buttons on mobile */
+            #syncStatus {
+                position: static !important;
+                flex-direction: column;
+                margin-top: 1rem;
+                padding-top: 1rem;
+                border-top: 1px solid var(--border);
+                gap: 0.75rem !important;
+            }
+            
+            #syncStatus button {
+                width: 100%;
+                padding: 0.75rem !important;
+            }
+            
+            /* Better modal scrolling on mobile */
+            .modal-content {
+                max-height: 85vh;
+                overflow-y: auto;
+            }
+            
+            /* Larger touch targets for small buttons */
+            button.small {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.85rem !important;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- PASSWORD PROTECTION SCREEN -->
-    <div id="loginScreen" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg);">
-        <div style="background: var(--bg-card); border: 2px solid var(--accent); padding: 3rem; max-width: 400px; width: 90%;">
-            <h1 style="font-family: 'Archivo Black', sans-serif; font-size: 2rem; margin-bottom: 0.5rem; text-align: center;">FINANCIAL OS</h1>
-            <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; margin-bottom: 2rem; letter-spacing: 2px;">SECURE ACCESS</div>
-            
-            <div class="input-group">
-                <label>Enter Password</label>
-                <input type="password" id="passwordInput" placeholder="••••••" style="font-size: 1.2rem; text-align: center; letter-spacing: 0.5rem;" />
-            </div>
-            
-            <button onclick="checkPassword()" style="width: 100%; margin-top: 1rem;">UNLOCK</button>
-            
-            <div id="loginError" style="display: none; color: var(--accent-red); text-align: center; margin-top: 1rem; font-size: 0.85rem;"></div>
-            
-            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim); text-align: center;">
-                🔒 Your data is encrypted and stored locally on this device only
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN APP (hidden until password correct) -->
-    <div id="mainApp" style="display: none;">
+    <!-- MAIN APP -->
     <div class="container">
         <header>
             <h1>Financial Operating System</h1>
@@ -1271,9 +1276,6 @@
         </div>
     </div>
 
-    </div>
-    <!-- End of mainApp container -->
-
     <!-- MODALS -->
     
     <!-- GitHub Setup Modal -->
@@ -1446,6 +1448,16 @@
 
         function saveData() {
             localStorage.setItem('financialOS', JSON.stringify(financialData));
+            
+            // Trigger GitHub sync if connected
+            if (typeof githubToken !== 'undefined' && githubToken && gistId) {
+                clearTimeout(window.syncTimeout);
+                window.syncTimeout = setTimeout(() => {
+                    if (typeof pushToGist === 'function') {
+                        pushToGist();
+                    }
+                }, 1000);
+            }
         }
 
         // Tab switching
@@ -1458,14 +1470,6 @@
         }
 
         // Modal functions
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
         // Market data fetching
         async function fetchMarketData() {
             // Show current/saved values immediately
@@ -2176,6 +2180,10 @@
                 document.getElementById('modalGasPrice').textContent = financialData.market.gasPrice.toFixed(2);
             }
         }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
 
         // Update settings displays
         function updateSettingsDisplays() {
@@ -2186,77 +2194,20 @@
     </script>
 
     <script>
-        // PASSWORD PROTECTION
-        const APP_PASSWORD = '122705';
-        
-        function checkPassword() {
-            const input = document.getElementById('passwordInput').value;
-            const errorDiv = document.getElementById('loginError');
-            
-            if (input === APP_PASSWORD) {
-                // Correct password
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                
-                // Store session (so they don't need to re-enter on page refresh)
-                sessionStorage.setItem('authenticated', 'true');
-                
-                // Initialize app
-                initializeApp();
-            } else {
-                // Wrong password
-                errorDiv.textContent = '❌ Incorrect password';
-                errorDiv.style.display = 'block';
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('passwordInput').focus();
-                
-                // Shake animation
-                const input = document.getElementById('passwordInput');
-                input.style.animation = 'shake 0.5s';
-                setTimeout(() => {
-                    input.style.animation = '';
-                }, 500);
-            }
-        }
-        
-        // Add shake animation
-        const shakeStyle = document.createElement('style');
-        shakeStyle.textContent = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-                20%, 40%, 60%, 80% { transform: translateX(10px); }
-            }
-        `;
-        document.head.appendChild(shakeStyle);
-        
-        // Check authentication on page load
+        // Initialize app on page load
         window.addEventListener('DOMContentLoaded', function() {
-            const passwordInput = document.getElementById('passwordInput');
-            if (passwordInput) {
-                // Allow Enter key to submit
-                passwordInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        checkPassword();
-                    }
-                });
-                
-                // Check if already authenticated in this session
-                if (sessionStorage.getItem('authenticated') === 'true') {
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-                    initializeApp();
-                } else {
-                    passwordInput.focus();
-                }
-            }
+            initializeApp();
         });
         
         // Initialize app after successful login
         function initializeApp() {
             loadData();
-            checkGitHubConnection();
             setInterval(fetchMarketData, 300000);
+            
+            // Check GitHub connection after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                checkGitHubConnection();
+            }, 500);
         }
         
         // GITHUB GIST SYNC MODULE
@@ -2268,13 +2219,20 @@
             githubToken = localStorage.getItem('github_token');
             gistId = localStorage.getItem('gist_id');
             
-            if (githubToken) {
-                document.getElementById('githubConnectBtn').style.display = 'none';
-                document.getElementById('manualSyncBtn').style.display = 'inline-block';
+            const connectBtn = document.getElementById('githubConnectBtn');
+            const syncBtn = document.getElementById('manualSyncBtn');
+            
+            if (githubToken && connectBtn && syncBtn) {
+                connectBtn.style.display = 'none';
+                syncBtn.style.display = 'inline-block';
                 updateSyncStatus('Connected');
                 
                 // Pull latest data on startup
                 pullFromGist();
+            } else if (!githubToken && connectBtn && syncBtn) {
+                connectBtn.style.display = 'inline-block';
+                syncBtn.style.display = 'none';
+                updateSyncStatus('Not synced');
             }
         }
         
@@ -2434,30 +2392,22 @@
         }
         
         function updateSyncStatus(status) {
-            document.getElementById('syncIndicator').textContent = status;
+            const indicator = document.getElementById('syncIndicator');
+            if (!indicator) return; // Element doesn't exist yet
+            
+            indicator.textContent = status;
             
             if (status.includes('✓')) {
-                document.getElementById('syncIndicator').style.color = 'var(--accent)';
+                indicator.style.color = 'var(--accent)';
             } else if (status.includes('fail')) {
-                document.getElementById('syncIndicator').style.color = 'var(--accent-red)';
+                indicator.style.color = 'var(--accent-red)';
             } else {
-                document.getElementById('syncIndicator').style.color = 'var(--text-dim)';
+                indicator.style.color = 'var(--text-dim)';
             }
         }
         
-        // Override saveData to auto-sync
-        const originalSaveData = saveData;
-        function saveData() {
-            originalSaveData();
-            
-            // Auto-sync after saving (with 1 second debounce)
-            if (githubToken && gistId) {
-                clearTimeout(window.syncTimeout);
-                window.syncTimeout = setTimeout(() => {
-                    pushToGist();
-                }, 1000);
-            }
-        }
+        // Integrate GitHub sync into saveData
+        // (Original saveData is in the main script section)
     </script>
 
     <script>
