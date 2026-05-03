@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Operating System</title>
     <!-- Version: 2.0 - Fixed Save Functions + GitHub Sync -->
+    
+    <!-- Mobile Console for Debugging -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+        // Only show console on mobile or when URL has ?debug
+        if (window.innerWidth < 768 || window.location.search.includes('debug')) {
+            eruda.init();
+        }
+    </script>
+    
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Archivo+Black&display=swap" rel="stylesheet">
     <style>
         :root {
