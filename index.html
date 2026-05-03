@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial OS - Secure Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: monospace;
+            background: #0d0d0d;
+            color: #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .login-box {
+            background: #1a1a1a;
+            border: 2px solid #00ff88;
+            padding: 3rem;
+            max-width: 400px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 2rem;
+            letter-spacing: 3px;
+        }
+        input {
+            width: 100%;
+            background: #151515;
+            border: 1px solid #2a2a2a;
+            color: #e8e8e8;
+            padding: 1rem;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 0.5rem;
+            font-family: monospace;
+            margin-bottom: 1rem;
+        }
+        input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+        button {
+            width: 100%;
+            background: #00ff88;
+            color: #0d0d0d;
+            border: none;
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        button:hover {
+            background: #00dd77;
+        }
+        .error {
+            color: #ff3366;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #2a2a2a;
+            font-size: 0.75rem;
+            color: #888;
+            text-align: center;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>Financial OS</h1>
+        <div class="subtitle">SECURE ACCESS</div>
+        
+        <input type="password" id="password" placeholder="••••••" />
+        <button onclick="checkPassword()">UNLOCK</button>
+        
+        <div class="error" id="error">❌ Incorrect password</div>
+        
+        <div class="footer">
+            🔒 Your data is encrypted and stored locally
+        </div>
+    </div>
+
+    <script>
+        const PASSWORD = '122705';
+        
+        function checkPassword() {
+            const input = document.getElementById('password').value;
+            
+            if (input === PASSWORD) {
+                sessionStorage.setItem('auth', 'true');
+                window.location.href = 'financial-os.html';
+            } else {
+                const error = document.getElementById('error');
+                error.style.display = 'block';
+                document.getElementById('password').value = '';
+                document.getElementById('password').style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    document.getElementById('password').style.animation = '';
+                }, 500);
+            }
+        }
+        
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkPassword();
+        });
+        
+        document.getElementById('password').focus();
+    </script>
+</body>
+</html>

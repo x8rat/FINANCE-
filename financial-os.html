@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Operating System</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Archivo+Black&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0d0d;
+            --bg-secondary: #151515;
+            --bg-card: #1a1a1a;
+            --border: #2a2a2a;
+            --text: #e8e8e8;
+            --text-dim: #888;
+            --accent: #00ff88;
+            --accent-blue: #00aaff;
+            --accent-red: #ff3366;
+            --accent-yellow: #ffcc00;
+            --accent-purple: #aa66ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'IBM Plex Mono', monospace;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+        
+        /* Header with live progress bar */
+        header {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        h1 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 2rem;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+        
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        
+        /* Progress Level System */
+        .progress-system {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-level {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .progress-xp {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+        
+        .progress-bar-container {
+            height: 24px;
+            background: var(--bg-secondary);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-blue) 100%);
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .progress-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--bg);
+            mix-blend-mode: difference;
+        }
+        
+        /* Monthly Goals */
+        .monthly-goals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .goal-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            position: relative;
+        }
+        
+        .goal-item.completed {
+            border-color: var(--accent);
+        }
+        
+        .goal-item.completed::before {
+            content: '✓';
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+        
+        .goal-title {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        
+        .goal-progress {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        
+        .goal-target {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 0.25rem;
+        }
+        
+        /* Navigation */
+        nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            padding: 1rem 1.5rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .nav-btn.active {
+            color: var(--accent);
+        }
+        
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+        }
+        
+        .nav-btn:hover {
+            color: var(--text);
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            transition: border-color 0.3s;
+        }
+        
+        .card:hover {
+            border-color: var(--accent);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .card-title {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin: 1rem 0;
+        }
+        
+        .card-value.green { color: var(--accent); }
+        .card-value.red { color: var(--accent-red); }
+        .card-value.blue { color: var(--accent-blue); }
+        .card-value.yellow { color: var(--accent-yellow); }
+        .card-value.purple { color: var(--accent-purple); }
+        
+        /* Stats */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: var(--text-dim);
+        }
+        
+        .stat-value {
+            font-weight: 600;
+        }
+        
+        /* Input Groups */
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--bg);
+        }
+        
+        /* Buttons */
+        button {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+        }
+        
+        button.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        
+        button.danger {
+            background: var(--accent-red);
+        }
+        
+        button.small {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+        
+        /* Transaction List */
+        .transaction-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .transaction-item {
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--accent-blue);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .transaction-item.income {
+            border-left-color: var(--accent);
+        }
+        
+        .transaction-item.expense {
+            border-left-color: var(--accent-red);
+        }
+        
+        .transaction-item.cs2 {
+            border-left-color: var(--accent-purple);
+        }
+        
+        .transaction-details {
+            flex: 1;
+        }
+        
+        .transaction-type {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+        
+        .transaction-description {
+            font-size: 0.95rem;
+            margin-top: 0.25rem;
+        }
+        
+        .transaction-meta {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 0.25rem;
+        }
+        
+        .transaction-amount {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+        
+        .alert.success {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .alert.warning {
+            background: rgba(255, 204, 0, 0.1);
+            border-color: var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+        
+        .alert.danger {
+            background: rgba(255, 51, 102, 0.1);
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            border: 2px solid var(--accent);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: 2rem;
+        }
+        
+        .modal-header {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+        }
+        
+        .modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        /* Live Market Data */
+        .market-ticker {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1rem;
+            display: flex;
+            gap: 2rem;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+        }
+        
+        .ticker-item {
+            white-space: nowrap;
+        }
+        
+        .ticker-label {
+            color: var(--text-dim);
+            margin-right: 0.5rem;
+        }
+        
+        .ticker-value {
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            header {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.3rem;
+                letter-spacing: 0;
+            }
+            
+            .subtitle {
+                font-size: 0.7rem;
+                letter-spacing: 1px;
+            }
+            
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            nav {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin-bottom: 1rem;
+                gap: 0.25rem;
+            }
+            
+            .nav-btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .card-value {
+                font-size: 2rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            
+            .modal-header {
+                font-size: 1.2rem;
+            }
+            
+            .modal-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            button {
+                padding: 1rem 1.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .transaction-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+            
+            .transaction-amount {
+                font-size: 1.5rem;
+            }
+            
+            .market-ticker {
+                flex-direction: column;
+                gap: 0.75rem;
+                padding: 1rem;
+            }
+            
+            .ticker-item {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+            }
+            
+            .progress-system {
+                margin-top: 1.5rem;
+                padding-top: 1.5rem;
+            }
+            
+            .progress-level {
+                font-size: 1.2rem;
+            }
+            
+            .progress-xp {
+                font-size: 0.8rem;
+            }
+            
+            .monthly-goals {
+                grid-template-columns: 1fr;
+            }
+            
+            /* Better touch targets */
+            input, select, textarea {
+                padding: 1rem;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            
+            /* Fix for iOS safe areas */
+            @supports (padding: max(0px)) {
+                .container {
+                    padding-left: max(1rem, env(safe-area-inset-left));
+                    padding-right: max(1rem, env(safe-area-inset-right));
+                    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+                }
+            }
+            
+            /* Horizontal scroll for nav */
+            nav::-webkit-scrollbar {
+                height: 4px;
+            }
+            
+            nav::-webkit-scrollbar-track {
+                background: var(--bg-secondary);
+            }
+            
+            nav::-webkit-scrollbar-thumb {
+                background: var(--border);
+            }
+            
+            /* Make transaction lists more thumb-friendly */
+            .transaction-list {
+                max-height: 400px;
+            }
+            
+            /* Better gas tank display on mobile */
+            .card > div[style*="grid-template-columns: 2fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+            
+            .stat-row {
+                padding: 0.5rem 0;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- PASSWORD PROTECTION SCREEN -->
+    <div id="loginScreen" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg);">
+        <div style="background: var(--bg-card); border: 2px solid var(--accent); padding: 3rem; max-width: 400px; width: 90%;">
+            <h1 style="font-family: 'Archivo Black', sans-serif; font-size: 2rem; margin-bottom: 0.5rem; text-align: center;">FINANCIAL OS</h1>
+            <div style="text-align: center; color: var(--text-dim); font-size: 0.8rem; margin-bottom: 2rem; letter-spacing: 2px;">SECURE ACCESS</div>
+            
+            <div class="input-group">
+                <label>Enter Password</label>
+                <input type="password" id="passwordInput" placeholder="••••••" style="font-size: 1.2rem; text-align: center; letter-spacing: 0.5rem;" />
+            </div>
+            
+            <button onclick="checkPassword()" style="width: 100%; margin-top: 1rem;">UNLOCK</button>
+            
+            <div id="loginError" style="display: none; color: var(--accent-red); text-align: center; margin-top: 1rem; font-size: 0.85rem;"></div>
+            
+            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim); text-align: center;">
+                🔒 Your data is encrypted and stored locally on this device only
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP (hidden until password correct) -->
+    <div id="mainApp" style="display: none;">
+    <div class="container">
+        <header>
+            <h1>Financial Operating System</h1>
+            <div class="subtitle">Complete Financial History & Investment Archive</div>
+            
+            <!-- Progress System -->
+            <div class="progress-system">
+                <div class="progress-header">
+                    <div>
+                        <span class="progress-level">LEVEL <span id="currentLevel">1</span></span>
+                        <span style="color: var(--text-dim); margin-left: 1rem; font-size: 0.9rem;">Financial Operator</span>
+                    </div>
+                    <div class="progress-xp">
+                        <span id="currentXP">0</span> / <span id="xpToNext">100</span> XP
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBar" style="width: 0%">
+                        <span class="progress-percentage" id="progressPercent">0%</span>
+                    </div>
+                </div>
+                
+                <!-- Monthly Goals -->
+                <div class="monthly-goals" id="monthlyGoals">
+                    <!-- Goals will be dynamically generated -->
+                </div>
+            </div>
+        </header>
+
+        <!-- Live Market Ticker -->
+        <div class="market-ticker" id="marketTicker">
+            <div class="ticker-item">
+                <span class="ticker-label">EUR/RON:</span>
+                <span class="ticker-value" id="tickerEurRon">Loading...</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">USD/RON:</span>
+                <span class="ticker-value" id="tickerUsdRon">Loading...</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">E95 Gas:</span>
+                <span class="ticker-value" id="tickerGas">9.02 RON/L</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">Net Worth:</span>
+                <span class="ticker-value green" id="tickerNetWorth">0 RON</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav>
+            <button class="nav-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="nav-btn" onclick="switchTab('income')">Income</button>
+            <button class="nav-btn" onclick="switchTab('expenses')">Expenses</button>
+            <button class="nav-btn" onclick="switchTab('cs2')">CS2 Investments</button>
+            <button class="nav-btn" onclick="switchTab('history')">Full History</button>
+            <button class="nav-btn" onclick="switchTab('analytics')">Analytics</button>
+            <button class="nav-btn" onclick="switchTab('settings')">Settings</button>
+        </nav>
+
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard" class="tab-content active">
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Cash on Hand</span>
+                    </div>
+                    <div class="card-value yellow" id="dashCash">233</div>
+                    <button class="small" onclick="openModal('cashModal')">Update</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Savings</span>
+                    </div>
+                    <div class="card-value green" id="dashSavings">1,950</div>
+                    <button class="small" onclick="openModal('savingsModal')">Update</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Total Debt</span>
+                    </div>
+                    <div class="card-value red" id="dashDebt">39,757</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Original Loan</span>
+                        <span class="stat-value">42,500 RON</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Interest Rate</span>
+                        <span class="stat-value">13.6% fixed</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Monthly Payment</span>
+                        <span class="stat-value">975.28 RON</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">May 20th Payment</span>
+                        <span class="stat-value" style="color: var(--accent);">PAID ✓</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Next Due</span>
+                        <span class="stat-value" id="loanNextDue">June 20, 2025</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">CS2 Portfolio</span>
+                    </div>
+                    <div class="card-value purple" id="dashCS2Value">0</div>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Items</span>
+                        <span class="stat-value" id="dashCS2Items">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Unrealized P/L</span>
+                        <span class="stat-value" id="dashCS2PL">0 RON</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Net Worth</span>
+                    </div>
+                    <div class="card-value blue" id="dashNetWorth">-8,817</div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 1rem;">
+                        Cash (233) + Savings (1,950) + CS2 (0) - Debt (11,000)
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">This Month</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Income</span>
+                        <span class="stat-value green" id="monthIncome">0 RON</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Expenses</span>
+                        <span class="stat-value red" id="monthExpenses">0 RON</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Net</span>
+                        <span class="stat-value" id="monthNet">0 RON</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Monthly Subscriptions</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Claude Pro</span>
+                        <span class="stat-value"><span id="claudeProRon">~105</span> RON <span style="color: var(--text-dim); font-size: 0.8rem;">(21 EUR)</span></span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">CLO3D</span>
+                        <span class="stat-value"><span id="clo3dRon">~262</span> RON <span style="color: var(--text-dim); font-size: 0.8rem;">(57 USD)</span></span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Canva (inactive)</span>
+                        <span class="stat-value" style="color: var(--text-dim);">160 RON/mo</span>
+                    </div>
+                    <div class="stat-row" style="border-top: 1px solid var(--border); margin-top: 0.5rem; padding-top: 0.75rem;">
+                        <span class="stat-label">Total Active</span>
+                        <span class="stat-value" id="totalSubsRon">~367 RON/mo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gas Tracker -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Gas Tank & Fuel Tracker</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                    <div>
+                        <div style="margin-bottom: 1rem;">
+                            <span style="color: var(--text-dim); font-size: 0.9rem;">Current Level:</span>
+                            <span style="font-size: 1.5rem; font-weight: 700; margin-left: 1rem;" id="gasLevel">13%</span>
+                        </div>
+                        <div class="progress-bar-container" style="height: 16px;">
+                            <div class="progress-bar-fill" id="gasBar" style="width: 13%; background: var(--accent-red);"></div>
+                        </div>
+                        <div style="margin-top: 1rem; font-size: 0.85rem;">
+                            <span style="color: var(--text-dim);">Tank Capacity:</span> 42 L
+                            <span style="margin-left: 1.5rem; color: var(--text-dim);">Current Price:</span> <span id="currentGasPrice">9.02</span> RON/L
+                        </div>
+                    </div>
+                    <div>
+                        <button onclick="openModal('gasModal')" style="width: 100%;">Fill Up Gas</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INCOME TAB -->
+        <div id="income" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Record Income</span>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Source</label>
+                        <select id="incomeSource">
+                            <option value="salary">Salary</option>
+                            <option value="roblox">Roblox</option>
+                            <option value="freelance">Freelance</option>
+                            <option value="gift">Gift</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Amount (RON)</label>
+                        <input type="number" id="incomeAmount" step="0.01" />
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Description</label>
+                    <input type="text" id="incomeDescription" placeholder="e.g., May salary, 3D model commission" />
+                </div>
+                <div class="input-group">
+                    <label>Payment Method</label>
+                    <select id="incomePaymentMethod">
+                        <option value="bank">Bank Transfer</option>
+                        <option value="cash">Cash</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="robux">Robux/DevEx</option>
+                    </select>
+                </div>
+                <button onclick="addIncome()">Record Income</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Income Summary</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Today</span>
+                    <span class="stat-value green" id="incomeTod ay">0 RON</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">This Week</span>
+                    <span class="stat-value green" id="incomeWeek">0 RON</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">This Month</span>
+                    <span class="stat-value green" id="incomeMonth">0 RON</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">This Year</span>
+                    <span class="stat-value green" id="incomeYear">0 RON</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Recent Income</span>
+                </div>
+                <div class="transaction-list" id="incomeList"></div>
+            </div>
+        </div>
+
+        <!-- EXPENSES TAB -->
+        <div id="expenses" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Record Expense</span>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Category</label>
+                        <select id="expenseCategory">
+                            <option value="gas">Gas/Fuel</option>
+                            <option value="loan">Loan Payment</option>
+                            <option value="food">Food/Groceries</option>
+                            <option value="eating_out">Eating Out</option>
+                            <option value="subscription">Subscription</option>
+                            <option value="car">Car Maintenance</option>
+                            <option value="insurance">Insurance</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="gifts">Gifts</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="misc">Miscellaneous</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Amount (RON)</label>
+                        <input type="number" id="expenseAmount" step="0.01" />
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Description</label>
+                    <input type="text" id="expenseDescription" placeholder="e.g., Weekly groceries, Car oil change" />
+                </div>
+                <div class="input-group">
+                    <label>Payment Method</label>
+                    <select id="expensePaymentMethod">
+                        <option value="cash">Cash</option>
+                        <option value="card">Debit Card</option>
+                        <option value="bank">Bank Transfer</option>
+                    </select>
+                </div>
+                <button onclick="addExpense()">Record Expense</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Expense Summary</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Today</span>
+                    <span class="stat-value red" id="expenseToday">0 RON</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">This Week</span>
+                    <span class="stat-value red" id="expenseWeek">0 RON</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">This Month</span>
+                    <span class="stat-value red" id="expenseMonth">0 RON</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">This Year</span>
+                    <span class="stat-value red" id="expenseYear">0 RON</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Expense Breakdown (This Month)</span>
+                </div>
+                <div id="expenseBreakdown"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Recent Expenses</span>
+                </div>
+                <div class="transaction-list" id="expenseList"></div>
+            </div>
+        </div>
+
+        <!-- CS2 INVESTMENTS TAB -->
+        <div id="cs2" class="tab-content">
+            <div class="alert warning" style="margin-bottom: 1.5rem;">
+                ⚠️ Connect to PriceEmpire to sync your CS2 portfolio automatically
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Add CS2 Investment</span>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Item Name</label>
+                        <input type="text" id="cs2ItemName" placeholder="e.g., AK-47 | Redline (Field-Tested)" />
+                    </div>
+                    <div class="input-group">
+                        <label>Quantity</label>
+                        <input type="number" id="cs2Quantity" value="1" min="1" />
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Purchase Price (EUR)</label>
+                        <input type="number" id="cs2PurchasePrice" step="0.01" />
+                    </div>
+                    <div class="input-group">
+                        <label>Current Value (EUR)</label>
+                        <input type="number" id="cs2CurrentValue" step="0.01" />
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Platform</label>
+                        <select id="cs2Platform">
+                            <option value="steam">Steam Market</option>
+                            <option value="buff163">Buff163</option>
+                            <option value="csdeals">CS.Deals</option>
+                            <option value="skinport">Skinport</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Classification</label>
+                        <select id="cs2Classification">
+                            <option value="long_term">Long-term Hold</option>
+                            <option value="short_term">Short-term Flip</option>
+                            <option value="personal">Personal Use</option>
+                            <option value="high_risk">High Risk</option>
+                            <option value="safe">Safe/Stable</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Notes</label>
+                    <textarea id="cs2Notes" rows="2" placeholder="Reason for purchase, market analysis, etc."></textarea>
+                </div>
+                <div style="background: var(--bg-secondary); padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                    <strong>RON Equivalent:</strong> <span id="cs2PurchaseRon">0</span> RON (using live EUR/RON rate)
+                </div>
+                <button onclick="addCS2Investment()">Add Investment</button>
+            </div>
+
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Portfolio Value</span>
+                    </div>
+                    <div class="card-value purple" id="cs2TotalValue">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
+                        <span id="cs2TotalRon">0 RON</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Unrealized P/L</span>
+                    </div>
+                    <div class="card-value" id="cs2UnrealizedPL">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
+                        <span id="cs2UnrealizedRon">0 RON</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Realized P/L</span>
+                    </div>
+                    <div class="card-value" id="cs2RealizedPL">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
+                        <span id="cs2RealizedRon">0 RON</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Current Holdings</span>
+                </div>
+                <div id="cs2Holdings"></div>
+            </div>
+        </div>
+
+        <!-- FULL HISTORY TAB -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Filter & Search</span>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Date Range</label>
+                        <select id="historyRange" onchange="filterHistory()">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                            <option value="all">All Time</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Transaction Type</label>
+                        <select id="historyType" onchange="filterHistory()">
+                            <option value="all">All Types</option>
+                            <option value="income">Income Only</option>
+                            <option value="expense">Expenses Only</option>
+                            <option value="cs2">CS2 Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Search</label>
+                    <input type="text" id="historySearch" placeholder="Search by description, category, amount..." oninput="filterHistory()" />
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Transaction History (<span id="historyCount">0</span> records)</span>
+                </div>
+                <div class="transaction-list" id="fullHistory" style="max-height: 700px;"></div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS TAB -->
+        <div id="analytics" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Monthly Comparison</span>
+                </div>
+                <div id="monthlyComparison"></div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Income Sources</span>
+                    </div>
+                    <div id="incomeBreakdown"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Spending Categories</span>
+                    </div>
+                    <div id="spendingBreakdown"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Net Worth Trend</span>
+                </div>
+                <div id="netWorthTrend"></div>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="settings" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Gas Price Settings</span>
+                </div>
+                <div class="input-group">
+                    <label>E95 Price (RON/L)</label>
+                    <input type="number" id="settingsGasPrice" step="0.01" />
+                </div>
+                <button onclick="updateGasPrice()">Update Gas Price</button>
+                <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-dim);">
+                    Current MOL price from gazonline.ro: 9.02 RON/L (last updated today)
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Monthly Settings</span>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Monthly Salary</label>
+                        <input type="number" id="settingsSalary" value="3300" />
+                    </div>
+                    <div class="input-group">
+                        <label>Monthly Loan Payment</label>
+                        <input type="number" id="settingsLoan" value="1000" />
+                    </div>
+                </div>
+                <button onclick="updateMonthlySettings()">Save Settings</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Data Management</span>
+                </div>
+                <button onclick="exportData()" class="secondary">Export All Data (JSON)</button>
+                <button onclick="resetProgress()" class="danger" style="margin-top: 1rem;">Reset Progress (Keep Transactions)</button>
+                <button onclick="resetAllData()" class="danger" style="margin-top: 0.5rem;">⚠️ DELETE EVERYTHING</button>
+            </div>
+        </div>
+    </div>
+
+    </div>
+    <!-- End of mainApp container -->
+
+    <!-- MODALS -->
+    <div id="cashModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Update Cash</div>
+            <div class="input-group">
+                <label>Current Cash (RON)</label>
+                <input type="number" id="editCash" step="0.01" />
+            </div>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeModal('cashModal')">Cancel</button>
+                <button onclick="saveCash()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="savingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Update Savings</div>
+            <div class="input-group">
+                <label>Current Savings (RON)</label>
+                <input type="number" id="editSavings" step="0.01" />
+            </div>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeModal('savingsModal')">Cancel</button>
+                <button onclick="saveSavings()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gasModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Fill Up Gas</div>
+            <div class="input-group">
+                <label>Liters Filled</label>
+                <input type="number" id="gasLiters" step="0.1" max="42" />
+            </div>
+            <div class="input-group">
+                <label>Total Cost (RON)</label>
+                <input type="number" id="gasCost" step="0.01" readonly />
+            </div>
+            <div style="background: var(--bg-secondary); padding: 1rem; margin: 1rem 0; font-size: 0.85rem;">
+                Current E95 Price: <strong id="modalGasPrice">9.02</strong> RON/L<br>
+                Tank will be: <strong id="newTankLevel">0%</strong> full
+            </div>
+            <script>
+                // Auto-calculate cost
+                document.getElementById('gasLiters').addEventListener('input', function() {
+                    const liters = parseFloat(this.value) || 0;
+                    const price = financialData.market.gasPrice;
+                    const cost = (liters * price).toFixed(2);
+                    document.getElementById('gasCost').value = cost;
+                    
+                    const currentLiters = (financialData.gasTank.currentPercent / 100) * financialData.gasTank.capacity;
+                    const newLiters = currentLiters + liters;
+                    const newPercent = Math.min((newLiters / financialData.gasTank.capacity * 100), 100).toFixed(0);
+                    document.getElementById('newTankLevel').textContent = newPercent + '%';
+                });
+            </script>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeModal('gasModal')">Cancel</button>
+                <button onclick="fillGas()">Record Fill-Up</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Core Data Structure
+        let financialData = {
+            // Current State
+            cash: 233,
+            savings: 1950,
+            
+            // Loan details
+            loanOriginal: 42500, // Original loan amount
+            loanCurrent: 39757, // Current amount owed
+            loanInterestRate: 13.6, // Fixed rate %
+            loanPayment: 975.28, // Monthly payment
+            loanNextDueDate: '2025-05-20',
+            mayLoanPaid: true, // May 20th payment already set aside
+            
+            // Gas tracking
+            gasTank: {
+                currentPercent: 13,
+                capacity: 42, // liters
+                fillsThisMonth: 0
+            },
+            
+            // Market data
+            market: {
+                eurRon: 5.2063, // Last known: May 3, 2026 - will update via API
+                usdRon: 4.4422, // Last known: May 3, 2026 - will update via API
+                gasPrice: 9.02, // RON per liter from gazonline.ro
+                lastUpdated: null
+            },
+            
+            // Subscriptions
+            subscriptions: [
+                { name: 'Claude Pro', amount: 21, currency: 'EUR', active: true },
+                { name: 'CLO3D', amount: 57, currency: 'USD', active: true },
+                { name: 'Canva', amount: 160, currency: 'RON', active: false }
+            ],
+            
+            // Transaction History (PERMANENT - never deleted)
+            transactions: [],
+            
+            // CS2 Investments
+            cs2Portfolio: [],
+            
+            // Progress System
+            progress: {
+                level: 1,
+                xp: 0,
+                xpToNext: 100
+            },
+            
+            // Monthly Goals
+            monthlyGoals: {
+                earnRoblox: { target: 500, current: 0, xp: 50 },
+                trackExpenses: { target: 30, current: 0, xp: 30 },
+                cs2Profit: { target: 200, current: 0, xp: 100 },
+                saveEmergency: { target: 3000, current: 1950, xp: 150 }
+            }
+        };
+
+        // Load from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('financialOS');
+            if (saved) {
+                const savedData = JSON.parse(saved);
+                financialData = { ...financialData, ...savedData };
+            }
+            updateAllDisplays();
+            fetchMarketData();
+        }
+
+        function saveData() {
+            localStorage.setItem('financialOS', JSON.stringify(financialData));
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Market data fetching
+        async function fetchMarketData() {
+            // Show current/saved values immediately
+            updateMarketTicker();
+            
+            try {
+                const eurResponse = await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
+                if (eurResponse.ok) {
+                    const eurData = await eurResponse.json();
+                    financialData.market.eurRon = eurData.rates.RON;
+                    financialData.market.lastUpdated = new Date().toISOString();
+                }
+                
+                const usdResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                if (usdResponse.ok) {
+                    const usdData = await usdResponse.json();
+                    financialData.market.usdRon = usdData.rates.RON;
+                    financialData.market.lastUpdated = new Date().toISOString();
+                }
+                
+                saveData(); // Save the new live rates
+                updateMarketTicker();
+                console.log('✅ Live exchange rates updated:', financialData.market);
+            } catch (error) {
+                console.log('⚠️ Using last known rates (API unavailable):', error);
+                // Already showing last known values, no action needed
+            }
+        }
+
+        function updateMarketTicker() {
+            const { eurRon, usdRon, gasPrice, lastUpdated } = financialData.market;
+            
+            // Add visual indicator if using cached rates
+            const tickerStatus = lastUpdated ? 
+                `(Live - ${new Date(lastUpdated).toLocaleTimeString()})` : 
+                '(Last known)';
+            
+            document.getElementById('tickerEurRon').textContent = eurRon.toFixed(4);
+            document.getElementById('tickerUsdRon').textContent = usdRon.toFixed(4);
+            document.getElementById('tickerGas').textContent = gasPrice.toFixed(2) + ' RON/L';
+            document.getElementById('tickerNetWorth').textContent = calculateNetWorth().toLocaleString() + ' RON';
+        }
+
+        // Calculate net worth
+        function calculateNetWorth() {
+            const cs2Value = financialData.cs2Portfolio.reduce((sum, item) => sum + (item.currentValue || 0), 0);
+            return financialData.cash + financialData.savings + cs2Value - financialData.loanCurrent;
+        }
+
+        // Progress system
+        function addXP(amount, reason) {
+            financialData.progress.xp += amount;
+            
+            // Level up check
+            while (financialData.progress.xp >= financialData.progress.xpToNext) {
+                financialData.progress.xp -= financialData.progress.xpToNext;
+                financialData.progress.level++;
+                financialData.progress.xpToNext = Math.floor(financialData.progress.xpToNext * 1.5);
+                
+                // Show level up notification
+                alert(`🎉 LEVEL UP! You're now Level ${financialData.progress.level}!`);
+            }
+            
+            saveData();
+            updateProgressDisplay();
+        }
+
+        function updateProgressDisplay() {
+            const { level, xp, xpToNext } = financialData.progress;
+            document.getElementById('currentLevel').textContent = level;
+            document.getElementById('currentXP').textContent = xp;
+            document.getElementById('xpToNext').textContent = xpToNext;
+            
+            const percentage = (xp / xpToNext * 100).toFixed(1);
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressPercent').textContent = percentage + '%';
+            
+            updateGoalsDisplay();
+        }
+
+        function updateGoalsDisplay() {
+            const goalsContainer = document.getElementById('monthlyGoals');
+            const goals = financialData.monthlyGoals;
+            
+            goalsContainer.innerHTML = Object.entries(goals).map(([key, goal]) => {
+                const percentage = Math.min((goal.current / goal.target * 100), 100).toFixed(0);
+                const completed = goal.current >= goal.target;
+                
+                return `
+                    <div class="goal-item ${completed ? 'completed' : ''}">
+                        <div class="goal-title">${formatGoalName(key)} (+${goal.xp} XP)</div>
+                        <div class="goal-progress">${goal.current.toLocaleString()} / ${goal.target.toLocaleString()}</div>
+                        <div class="goal-target">${percentage}% Complete</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatGoalName(key) {
+            const names = {
+                earnRoblox: 'Earn Roblox Income',
+                trackExpenses: 'Track Expenses',
+                cs2Profit: 'CS2 Profit',
+                saveEmergency: 'Emergency Fund'
+            };
+            return names[key] || key;
+        }
+
+        // Update all displays
+        function updateAllDisplays() {
+            // Dashboard
+            document.getElementById('dashCash').textContent = financialData.cash.toLocaleString();
+            document.getElementById('dashSavings').textContent = financialData.savings.toLocaleString();
+            document.getElementById('dashDebt').textContent = financialData.loanCurrent.toLocaleString();
+            
+            // Update subscription costs in RON using live rates
+            if (financialData.market.eurRon && financialData.market.usdRon) {
+                const claudeProRon = Math.round(21 * financialData.market.eurRon);
+                const clo3dRon = Math.round(57 * financialData.market.usdRon);
+                const totalSubs = claudeProRon + clo3dRon;
+                
+                document.getElementById('claudeProRon').textContent = '~' + claudeProRon;
+                document.getElementById('clo3dRon').textContent = '~' + clo3dRon;
+                document.getElementById('totalSubsRon').textContent = '~' + totalSubs + ' RON/mo';
+            }
+            
+            const cs2Value = financialData.cs2Portfolio.reduce((sum, item) => sum + (item.currentValue || 0), 0);
+            document.getElementById('dashCS2Value').textContent = cs2Value.toLocaleString();
+            document.getElementById('dashCS2Items').textContent = financialData.cs2Portfolio.length;
+            
+            const netWorth = calculateNetWorth();
+            document.getElementById('dashNetWorth').textContent = netWorth.toLocaleString();
+            document.getElementById('dashNetWorth').className = 'card-value ' + (netWorth >= 0 ? 'green' : 'red');
+            
+            // Update net worth explanation
+            const netWorthCard = document.getElementById('dashNetWorth').parentElement;
+            const explanation = netWorthCard.querySelector('div[style*="font-size: 0.8rem"]');
+            if (explanation) {
+                explanation.textContent = `Cash (${financialData.cash}) + Savings (${financialData.savings}) + CS2 (${cs2Value.toFixed(0)}) - Loan (${financialData.loanCurrent.toLocaleString()})`;
+            }
+            
+            // Gas
+            document.getElementById('gasLevel').textContent = financialData.gasTank.currentPercent + '%';
+            document.getElementById('gasBar').style.width = financialData.gasTank.currentPercent + '%';
+            
+            // Change gas bar color based on level
+            const gasBar = document.getElementById('gasBar');
+            if (financialData.gasTank.currentPercent <= 20) {
+                gasBar.style.background = 'var(--accent-red)';
+            } else if (financialData.gasTank.currentPercent <= 50) {
+                gasBar.style.background = 'var(--accent-yellow)';
+            } else {
+                gasBar.style.background = 'var(--accent)';
+            }
+            
+            document.getElementById('currentGasPrice').textContent = financialData.market.gasPrice.toFixed(2);
+            
+            // Progress
+            updateProgressDisplay();
+            updateMarketTicker();
+            updateTransactionLists();
+            updateCS2Holdings();
+        }
+
+        // Initialize
+        loadData();
+        setInterval(fetchMarketData, 300000); // Update market data every 5 minutes
+
+        // Income functions
+        function addIncome() {
+            const source = document.getElementById('incomeSource').value;
+            const amount = parseFloat(document.getElementById('incomeAmount').value);
+            const description = document.getElementById('incomeDescription').value;
+            const paymentMethod = document.getElementById('incomePaymentMethod').value;
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            const transaction = {
+                id: Date.now(),
+                type: 'income',
+                source,
+                amount,
+                description,
+                paymentMethod,
+                date: new Date().toISOString(),
+                timestamp: Date.now()
+            };
+
+            financialData.transactions.push(transaction);
+
+            // Update cash based on payment method
+            if (paymentMethod === 'cash') {
+                financialData.cash += amount;
+            } else {
+                financialData.savings += amount;
+            }
+
+            // Update goals
+            if (source === 'roblox') {
+                financialData.monthlyGoals.earnRoblox.current += amount;
+                if (financialData.monthlyGoals.earnRoblox.current >= financialData.monthlyGoals.earnRoblox.target) {
+                    addXP(financialData.monthlyGoals.earnRoblox.xp, 'Completed Roblox goal');
+                }
+            }
+
+            addXP(5, 'Recorded income');
+            saveData();
+            updateAllDisplays();
+            updateTransactionLists();
+
+            // Clear form
+            document.getElementById('incomeAmount').value = '';
+            document.getElementById('incomeDescription').value = '';
+
+            alert(`✅ Income recorded: +${amount.toFixed(2)} RON`);
+        }
+
+        // Expense functions
+        function addExpense() {
+            const category = document.getElementById('expenseCategory').value;
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const description = document.getElementById('expenseDescription').value;
+            const paymentMethod = document.getElementById('expensePaymentMethod').value;
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            const transaction = {
+                id: Date.now(),
+                type: 'expense',
+                category,
+                amount,
+                description,
+                paymentMethod,
+                date: new Date().toISOString(),
+                timestamp: Date.now()
+            };
+
+            financialData.transactions.push(transaction);
+
+            // Deduct from cash/savings
+            if (paymentMethod === 'cash') {
+                financialData.cash -= amount;
+            } else {
+                financialData.savings -= amount;
+            }
+
+            // Update goals
+            financialData.monthlyGoals.trackExpenses.current++;
+            if (financialData.monthlyGoals.trackExpenses.current >= financialData.monthlyGoals.trackExpenses.target) {
+                addXP(financialData.monthlyGoals.trackExpenses.xp, 'Completed expense tracking goal');
+            }
+
+            addXP(3, 'Tracked expense');
+            saveData();
+            updateAllDisplays();
+            updateTransactionLists();
+
+            // Clear form
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseDescription').value = '';
+
+            alert(`✅ Expense recorded: -${amount.toFixed(2)} RON`);
+        }
+
+        // CS2 Investment functions
+        function addCS2Investment() {
+            const item = {
+                id: Date.now(),
+                name: document.getElementById('cs2ItemName').value,
+                quantity: parseInt(document.getElementById('cs2Quantity').value) || 1,
+                purchasePriceEur: parseFloat(document.getElementById('cs2PurchasePrice').value),
+                currentValueEur: parseFloat(document.getElementById('cs2CurrentValue').value),
+                purchasePrice: parseFloat(document.getElementById('cs2PurchasePrice').value) * (financialData.market.eurRon || 5), // EUR to RON
+                currentValue: parseFloat(document.getElementById('cs2CurrentValue').value) * (financialData.market.eurRon || 5), // EUR to RON
+                platform: document.getElementById('cs2Platform').value,
+                classification: document.getElementById('cs2Classification').value,
+                notes: document.getElementById('cs2Notes').value,
+                purchaseDate: new Date().toISOString(),
+                sold: false
+            };
+
+            if (!item.name || !item.purchasePriceEur) {
+                alert('Please enter item name and purchase price');
+                return;
+            }
+
+            financialData.cs2Portfolio.push(item);
+
+            // Record as transaction
+            financialData.transactions.push({
+                id: Date.now(),
+                type: 'cs2',
+                subType: 'purchase',
+                itemName: item.name,
+                amount: item.purchasePrice,
+                amountEur: item.purchasePriceEur,
+                description: `Purchased ${item.name} (${item.purchasePriceEur} EUR)`,
+                date: new Date().toISOString(),
+                timestamp: Date.now()
+            });
+
+            // Deduct purchase price from savings
+            financialData.savings -= item.purchasePrice;
+
+            addXP(10, 'Added CS2 investment');
+            saveData();
+            updateAllDisplays();
+
+            // Clear form
+            document.getElementById('cs2ItemName').value = '';
+            document.getElementById('cs2PurchasePrice').value = '';
+            document.getElementById('cs2CurrentValue').value = '';
+            document.getElementById('cs2Notes').value = '';
+
+            alert(`✅ CS2 item added: ${item.name}\n${item.purchasePriceEur} EUR (${item.purchasePrice.toFixed(2)} RON)`);
+        }
+
+        function updateCS2Holdings() {
+            const holdingsDiv = document.getElementById('cs2Holdings');
+            const portfolio = financialData.cs2Portfolio;
+
+            if (portfolio.length === 0) {
+                holdingsDiv.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No CS2 investments yet. Add your first item above!</div>';
+                
+                // Update summary values
+                document.getElementById('cs2TotalValue').textContent = '0 EUR';
+                document.getElementById('cs2TotalRon').textContent = '0 RON';
+                document.getElementById('cs2UnrealizedPL').textContent = '0 EUR';
+                document.getElementById('cs2UnrealizedRon').textContent = '0 RON';
+                document.getElementById('cs2RealizedPL').textContent = '0 EUR';
+                document.getElementById('cs2RealizedRon').textContent = '0 RON';
+                return;
+            }
+
+            // Calculate totals
+            let totalValueEur = 0;
+            let totalPurchaseEur = 0;
+            
+            portfolio.forEach(item => {
+                totalValueEur += item.currentValueEur || item.purchasePriceEur;
+                totalPurchaseEur += item.purchasePriceEur;
+            });
+            
+            const unrealizedPLEur = totalValueEur - totalPurchaseEur;
+            const eurRon = financialData.market.eurRon || 5;
+            
+            // Update summary
+            document.getElementById('cs2TotalValue').textContent = totalValueEur.toFixed(2) + ' EUR';
+            document.getElementById('cs2TotalRon').textContent = (totalValueEur * eurRon).toFixed(0) + ' RON';
+            document.getElementById('cs2UnrealizedPL').textContent = (unrealizedPLEur >= 0 ? '+' : '') + unrealizedPLEur.toFixed(2) + ' EUR';
+            document.getElementById('cs2UnrealizedPL').className = 'card-value ' + (unrealizedPLEur >= 0 ? 'green' : 'red');
+            document.getElementById('cs2UnrealizedRon').textContent = (unrealizedPLEur * eurRon).toFixed(0) + ' RON';
+
+            holdingsDiv.innerHTML = portfolio.map(item => {
+                const plEur = (item.currentValueEur || item.purchasePriceEur) - item.purchasePriceEur;
+                const plPercent = ((plEur / item.purchasePriceEur) * 100).toFixed(2);
+                const plColor = plEur >= 0 ? 'var(--accent)' : 'var(--accent-red)';
+                const plRon = plEur * eurRon;
+
+                return `
+                    <div class="transaction-item cs2">
+                        <div class="transaction-details">
+                            <div class="transaction-type">${item.classification} • ${item.platform}</div>
+                            <div class="transaction-description">${item.name} (x${item.quantity})</div>
+                            <div class="transaction-meta">
+                                Bought: ${item.purchasePriceEur.toFixed(2)} EUR (${item.purchasePrice.toFixed(0)} RON) | 
+                                Current: ${(item.currentValueEur || item.purchasePriceEur).toFixed(2)} EUR (${item.currentValue.toFixed(0)} RON)
+                            </div>
+                            <div class="transaction-meta">
+                                P/L: <span style="color: ${plColor}; font-weight: 700;">${plEur >= 0 ? '+' : ''}${plEur.toFixed(2)} EUR (${plRon.toFixed(0)} RON) • ${plPercent}%</span>
+                            </div>
+                            ${item.notes ? `<div class="transaction-meta">${item.notes}</div>` : ''}
+                        </div>
+                        <div>
+                            <button class="small secondary" onclick="updateCS2Item(${item.id})">Update</button>
+                            <button class="small danger" onclick="sellCS2Item(${item.id})" style="margin-top: 0.5rem;">Sell</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Real-time EUR to RON conversion for CS2 input
+        if (document.getElementById('cs2PurchasePrice')) {
+            document.getElementById('cs2PurchasePrice').addEventListener('input', function() {
+                const eur = parseFloat(this.value) || 0;
+                const ron = eur * (financialData.market.eurRon || 5);
+                document.getElementById('cs2PurchaseRon').textContent = ron.toFixed(2);
+            });
+        }
+
+        // Fill gas function
+        function fillGas() {
+            const liters = parseFloat(document.getElementById('gasLiters').value);
+            const cost = parseFloat(document.getElementById('gasCost').value);
+
+            if (!liters || !cost) {
+                alert('Please enter liters filled');
+                return;
+            }
+
+            // Calculate new tank level
+            const currentLiters = (financialData.gasTank.currentPercent / 100) * financialData.gasTank.capacity;
+            const newLiters = Math.min(currentLiters + liters, financialData.gasTank.capacity);
+            financialData.gasTank.currentPercent = Math.round((newLiters / financialData.gasTank.capacity) * 100);
+            financialData.gasTank.fillsThisMonth++;
+
+            // Record as expense
+            financialData.transactions.push({
+                id: Date.now(),
+                type: 'expense',
+                category: 'gas',
+                amount: cost,
+                description: `Gas fill-up: ${liters}L @ ${financialData.market.gasPrice.toFixed(2)} RON/L`,
+                paymentMethod: 'card',
+                date: new Date().toISOString(),
+                timestamp: Date.now()
+            });
+
+            // Deduct from cash
+            financialData.cash -= cost;
+
+            addXP(5, 'Tracked gas fill-up');
+            saveData();
+            updateAllDisplays();
+            updateTransactionLists();
+            closeModal('gasModal');
+
+            alert(`✅ Gas fill-up recorded: ${liters}L for ${cost.toFixed(2)} RON`);
+        }
+
+        // Update transaction lists
+        function updateTransactionLists() {
+            updateIncomeSummary();
+            updateExpenseSummary();
+            updateFullHistory();
+        }
+
+        function updateIncomeSummary() {
+            const now = new Date();
+            const incomeTransactions = financialData.transactions.filter(t => t.type === 'income');
+
+            // Today
+            const today = incomeTransactions.filter(t => {
+                const date = new Date(t.date);
+                return date.toDateString() === now.toDateString();
+            }).reduce((sum, t) => sum + t.amount, 0);
+
+            // This week
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
+            const week = incomeTransactions.filter(t => {
+                const date = new Date(t.date);
+                return date >= weekStart;
+            }).reduce((sum, t) => sum + t.amount, 0);
+
+            // This month
+            const month = incomeTransactions.filter(t => {
+                const date = new Date(t.date);
+                return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+            }).reduce((sum, t) => sum + t.amount, 0);
+
+            // This year
+            const year = incomeTransactions.filter(t => {
+                const date = new Date(t.date);
+                return date.getFullYear() === now.getFullYear();
+            }).reduce((sum, t) => sum + t.amount, 0);
+
+            document.getElementById('incomeToday').textContent = today.toFixed(0) + ' RON';
+            document.getElementById('incomeWeek').textContent = week.toFixed(0) + ' RON';
+            document.getElementById('incomeMonth').textContent = month.toFixed(0) + ' RON';
+            document.getElementById('incomeYear').textContent = year.toFixed(0) + ' RON';
+
+            if (document.getElementById('monthIncome')) {
+                document.getElementById('monthIncome').textContent = month.toFixed(0) + ' RON';
+            }
+
+            // Recent income list
+            const incomeList = document.getElementById('incomeList');
+            if (incomeList) {
+                const recent = incomeTransactions.slice(-10).reverse();
+                incomeList.innerHTML = recent.length > 0 ? recent.map(t => `
+                    <div class="transaction-item income">
+                        <div class="transaction-details">
+                            <div class="transaction-type">${t.source}</div>
+                            <div class="transaction-description">${t.description || 'No description'}</div>
+                            <div class="transaction-meta">${new Date(t.date).toLocaleString()} • ${t.paymentMethod}</div>
+                        </div>
+                        <div class="transaction-amount" style="color: var(--accent);">
+                            +${t.amount.toFixed(2)} RON
+                        </div>
+                    </div>
+                `).join('') : '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No income recorded yet</div>';
+            }
+        }
+
+        function updateExpenseSummary() {
+            const now = new Date();
+            const expenseTransactions = financialData.transactions.filter(t => t.type === 'expense');
+
+            // Today
+            const today = expenseTransactions.filter(t => {
+                const date = new Date(t.date);
+                return date.toDateString() === now.toDateString();
+            }).reduce((sum, t) => sum + t.amount, 0);
+
+            // This week
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
+            const week = expenseTransactions.filter(t => {
+                const date = new Date(t.date);
+                return date >= weekStart;
+            }).reduce((sum, t) => sum + t.amount, 0);
+
+            // This month
+            const month = expenseTransactions.filter(t => {
+                const date = new Date(t.date);
+                return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+            }).reduce((sum, t) => sum + t.amount, 0);
+
+            // This year
+            const year = expenseTransactions.filter(t => {
+                const date = new Date(t.date);
+                return date.getFullYear() === now.getFullYear();
+            }).reduce((sum, t) => sum + t.amount, 0);
+
+            document.getElementById('expenseToday').textContent = today.toFixed(0) + ' RON';
+            document.getElementById('expenseWeek').textContent = week.toFixed(0) + ' RON';
+            document.getElementById('expenseMonth').textContent = month.toFixed(0) + ' RON';
+            document.getElementById('expenseYear').textContent = year.toFixed(0) + ' RON';
+
+            if (document.getElementById('monthExpenses')) {
+                document.getElementById('monthExpenses').textContent = month.toFixed(0) + ' RON';
+                const income = parseFloat(document.getElementById('monthIncome').textContent) || 0;
+                const net = income - month;
+                document.getElementById('monthNet').textContent = net.toFixed(0) + ' RON';
+                document.getElementById('monthNet').className = 'stat-value ' + (net >= 0 ? 'green' : 'red');
+            }
+
+            // Recent expenses list
+            const expenseList = document.getElementById('expenseList');
+            if (expenseList) {
+                const recent = expenseTransactions.slice(-10).reverse();
+                expenseList.innerHTML = recent.length > 0 ? recent.map(t => `
+                    <div class="transaction-item expense">
+                        <div class="transaction-details">
+                            <div class="transaction-type">${t.category}</div>
+                            <div class="transaction-description">${t.description || 'No description'}</div>
+                            <div class="transaction-meta">${new Date(t.date).toLocaleString()} • ${t.paymentMethod}</div>
+                        </div>
+                        <div class="transaction-amount" style="color: var(--accent-red);">
+                            -${t.amount.toFixed(2)} RON
+                        </div>
+                    </div>
+                `).join('') : '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No expenses recorded yet</div>';
+            }
+        }
+
+        function updateFullHistory() {
+            filterHistory();
+        }
+
+        function filterHistory() {
+            const range = document.getElementById('historyRange').value;
+            const type = document.getElementById('historyType').value;
+            const search = document.getElementById('historySearch').value.toLowerCase();
+
+            let filtered = [...financialData.transactions];
+
+            // Filter by type
+            if (type !== 'all') {
+                filtered = filtered.filter(t => t.type === type);
+            }
+
+            // Filter by date range
+            const now = new Date();
+            if (range === 'today') {
+                filtered = filtered.filter(t => {
+                    const date = new Date(t.date);
+                    return date.toDateString() === now.toDateString();
+                });
+            } else if (range === 'week') {
+                const weekStart = new Date(now);
+                weekStart.setDate(now.getDate() - now.getDay());
+                filtered = filtered.filter(t => new Date(t.date) >= weekStart);
+            } else if (range === 'month') {
+                filtered = filtered.filter(t => {
+                    const date = new Date(t.date);
+                    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                });
+            } else if (range === 'year') {
+                filtered = filtered.filter(t => {
+                    const date = new Date(t.date);
+                    return date.getFullYear() === now.getFullYear();
+                });
+            }
+
+            // Filter by search
+            if (search) {
+                filtered = filtered.filter(t => 
+                    (t.description && t.description.toLowerCase().includes(search)) ||
+                    (t.category && t.category.toLowerCase().includes(search)) ||
+                    (t.source && t.source.toLowerCase().includes(search)) ||
+                    t.amount.toString().includes(search)
+                );
+            }
+
+            // Sort by date (newest first)
+            filtered.sort((a, b) => b.timestamp - a.timestamp);
+
+            document.getElementById('historyCount').textContent = filtered.length;
+
+            const historyDiv = document.getElementById('fullHistory');
+            if (filtered.length === 0) {
+                historyDiv.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No transactions found</div>';
+                return;
+            }
+
+            historyDiv.innerHTML = filtered.map(t => {
+                const typeClass = t.type;
+                const typeLabel = t.type.toUpperCase();
+                const amountSign = t.type === 'income' ? '+' : '-';
+                const amountColor = t.type === 'income' ? 'var(--accent)' : 'var(--accent-red)';
+
+                return `
+                    <div class="transaction-item ${typeClass}">
+                        <div class="transaction-details">
+                            <div class="transaction-type">${typeLabel} • ${t.category || t.source || 'N/A'}</div>
+                            <div class="transaction-description">${t.description || 'No description'}</div>
+                            <div class="transaction-meta">${new Date(t.date).toLocaleString()}${t.paymentMethod ? ' • ' + t.paymentMethod : ''}</div>
+                        </div>
+                        <div class="transaction-amount" style="color: ${amountColor};">
+                            ${amountSign}${t.amount.toFixed(2)} RON
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Modal save functions
+        function saveCash() {
+            const newCash = parseFloat(document.getElementById('editCash').value);
+            if (newCash >= 0) {
+                financialData.cash = newCash;
+                saveData();
+                updateAllDisplays();
+                closeModal('cashModal');
+            }
+        }
+
+        function saveSavings() {
+            const newSavings = parseFloat(document.getElementById('editSavings').value);
+            if (newSavings >= 0) {
+                financialData.savings = newSavings;
+                saveData();
+                updateAllDisplays();
+                closeModal('savingsModal');
+            }
+        }
+
+        // Settings functions
+        function updateGasPrice() {
+            const newPrice = parseFloat(document.getElementById('settingsGasPrice').value);
+            if (newPrice > 0) {
+                financialData.market.gasPrice = newPrice;
+                saveData();
+                updateAllDisplays();
+                alert('✅ Gas price updated');
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(financialData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `financial-data-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function resetAllData() {
+            if (confirm('⚠️ THIS WILL DELETE EVERYTHING. Are you absolutely sure?')) {
+                if (confirm('This cannot be undone. Final confirmation?')) {
+                    localStorage.removeItem('financialOS');
+                    location.reload();
+                }
+            }
+        }
+
+        // Initialize modals with current values
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            
+            if (modalId === 'cashModal') {
+                document.getElementById('editCash').value = financialData.cash;
+            } else if (modalId === 'savingsModal') {
+                document.getElementById('editSavings').value = financialData.savings;
+            } else if (modalId === 'gasModal') {
+                document.getElementById('gasLiters').value = '';
+                document.getElementById('gasCost').value = '';
+                document.getElementById('modalGasPrice').textContent = financialData.market.gasPrice.toFixed(2);
+            }
+        }
+
+        // Update settings displays
+        function updateSettingsDisplays() {
+            if (document.getElementById('settingsGasPrice')) {
+                document.getElementById('settingsGasPrice').value = financialData.market.gasPrice;
+            }
+        }
+    </script>
+
+    <script>
+        // PASSWORD PROTECTION
+        const APP_PASSWORD = '122705';
+        
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (input === APP_PASSWORD) {
+                // Correct password
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                // Store session (so they don't need to re-enter on page refresh)
+                sessionStorage.setItem('authenticated', 'true');
+                
+                // Initialize app
+                initializeApp();
+            } else {
+                // Wrong password
+                errorDiv.textContent = '❌ Incorrect password';
+                errorDiv.style.display = 'block';
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+                
+                // Shake animation
+                const input = document.getElementById('passwordInput');
+                input.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    input.style.animation = '';
+                }, 500);
+            }
+        }
+        
+        // Add shake animation
+        const shakeStyle = document.createElement('style');
+        shakeStyle.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+                20%, 40%, 60%, 80% { transform: translateX(10px); }
+            }
+        `;
+        document.head.appendChild(shakeStyle);
+        
+        // Check authentication on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('passwordInput');
+            if (passwordInput) {
+                // Allow Enter key to submit
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        checkPassword();
+                    }
+                });
+                
+                // Check if already authenticated in this session
+                if (sessionStorage.getItem('authenticated') === 'true') {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+                    initializeApp();
+                } else {
+                    passwordInput.focus();
+                }
+            }
+        });
+        
+        // Initialize app after successful login
+        function initializeApp() {
+            loadData();
+            setInterval(fetchMarketData, 300000);
+        }
+    </script>
+
+    <script>
+        // MAIN APP CODE
+        // Core Data Structure</body>
+</html>
