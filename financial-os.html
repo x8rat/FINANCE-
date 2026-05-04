@@ -1281,7 +1281,11 @@
                 <div class="card-header">
                     <span class="card-title">Data Management</span>
                 </div>
-                <button onclick="exportData()" class="secondary">Export All Data (JSON)</button>
+                <button onclick="exportData()" class="secondary">📥 Export All Data (JSON)</button>
+                <div style="margin-top: 1rem;">
+                    <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importData(event)">
+                    <button onclick="document.getElementById('importFileInput').click()" class="secondary">📤 Import Data (JSON)</button>
+                </div>
                 <button onclick="resetProgress()" class="danger" style="margin-top: 1rem;">Reset Progress (Keep Transactions)</button>
                 <button onclick="resetAllData()" class="danger" style="margin-top: 0.5rem;">⚠️ DELETE EVERYTHING</button>
             </div>
@@ -1488,16 +1492,12 @@
             localStorage.setItem('financialOS', JSON.stringify(financialData));
             console.log('Data saved to localStorage');
             
-            // Auto-push to GitHub after 3 seconds (allows batching multiple quick changes)
+            // Auto-push to GitHub IMMEDIATELY
             if (typeof githubToken !== 'undefined' && githubToken && gistId) {
-                clearTimeout(window.syncTimeout);
-                console.log('⏱️ Will auto-push to GitHub in 3 seconds...');
-                window.syncTimeout = setTimeout(() => {
-                    if (typeof pushToGist === 'function') {
-                        console.log('🔄 Auto-pushing to GitHub...');
-                        pushToGist();
-                    }
-                }, 3000); // 3 second delay
+                console.log('🔄 Auto-pushing to GitHub immediately...');
+                if (typeof pushToGist === 'function') {
+                    pushToGist();
+                }
             }
         }
 
@@ -1627,8 +1627,12 @@
                 const dashSavings = document.getElementById('dashSavings');
                 const dashDebt = document.getElementById('dashDebt');
                 
-                if (dashCash) dashCash.textContent = financialData.cash.toLocaleString();
-                if (dashSavings) dashSavings.textContent = financialData.savings.toLocaleString();
+                // Round to avoid floating point errors
+                financialData.cash = Math.round(financialData.cash * 100) / 100;
+                financialData.savings = Math.round(financialData.savings * 100) / 100;
+                
+                if (dashCash) dashCash.textContent = financialData.cash.toFixed(2);
+                if (dashSavings) dashSavings.textContent = financialData.savings.toFixed(2);
                 if (dashDebt) dashDebt.textContent = financialData.loanCurrent.toLocaleString();
                 
                 // Update subscription costs in RON using live rates
@@ -1691,11 +1695,30 @@
                 const currentGasPrice = document.getElementById('currentGasPrice');
                 if (currentGasPrice) currentGasPrice.textContent = financialData.market.gasPrice.toFixed(2);
                 
-                // Progress
-                updateProgressDisplay();
-                updateMarketTicker();
-                updateTransactionLists();
-                updateCS2Holdings();
+                // Progress - with individual error handling
+                try {
+                    updateProgressDisplay();
+                } catch (e) {
+                    console.error('Error in updateProgressDisplay:', e);
+                }
+                
+                try {
+                    updateMarketTicker();
+                } catch (e) {
+                    console.error('Error in updateMarketTicker:', e);
+                }
+                
+                try {
+                    updateTransactionLists();
+                } catch (e) {
+                    console.error('Error in updateTransactionLists:', e);
+                }
+                
+                try {
+                    updateCS2Holdings();
+                } catch (e) {
+                    console.error('Error in updateCS2Holdings:', e);
+                }
             } catch (error) {
                 console.error('Error in updateAllDisplays:', error);
             }
@@ -1711,6 +1734,12 @@
             const amount = parseFloat(document.getElementById('incomeAmount').value);
             const description = document.getElementById('incomeDescription').value;
             const paymentMethod = document.getElementById('incomePaymentMethod').value;
+
+            console.log('=== ADD INCOME DEBUG ===');
+            console.log('Source:', source);
+            console.log('Amount:', amount);
+            console.log('Description:', description);
+            console.log('Payment method:', paymentMethod);
 
             if (!amount || amount <= 0) {
                 alert('Please enter a valid amount');
@@ -1728,13 +1757,24 @@
                 timestamp: Date.now()
             };
 
+            console.log('Transaction object:', transaction);
+            console.log('Current transactions count:', financialData.transactions.length);
+
             financialData.transactions.push(transaction);
+            
+            console.log('After push - transactions count:', financialData.transactions.length);
+            console.log('Last transaction:', financialData.transactions[financialData.transactions.length - 1]);
 
             // Update cash based on payment method
+            const oldSavings = financialData.savings;
+            const oldCash = financialData.cash;
+            
             if (paymentMethod === 'cash') {
                 financialData.cash += amount;
+                console.log('Updated cash:', oldCash, '→', financialData.cash);
             } else {
                 financialData.savings += amount;
+                console.log('Updated savings:', oldSavings, '→', financialData.savings);
             }
 
             // Update goals
@@ -1746,8 +1786,14 @@
             }
 
             addXP(5, 'Recorded income');
+            
+            console.log('Calling saveData...');
             saveData();
+            
+            console.log('Calling updateAllDisplays...');
             updateAllDisplays();
+            
+            console.log('Calling updateTransactionLists...');
             updateTransactionLists();
 
             // Clear form
@@ -1755,6 +1801,7 @@
             document.getElementById('incomeDescription').value = '';
 
             alert(`✅ Income recorded: +${amount.toFixed(2)} RON`);
+            console.log('=== ADD INCOME COMPLETE ===');
         }
 
         // Expense functions
@@ -1916,9 +1963,11 @@
                             </div>
                             ${item.notes ? `<div class="transaction-meta">${item.notes}</div>` : ''}
                         </div>
-                        <div>
-                            <button class="small secondary" onclick="updateCS2Item(${item.id})">Update</button>
-                            <button class="small danger" onclick="sellCS2Item(${item.id})" style="margin-top: 0.5rem;">Sell</button>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <button class="small secondary" onclick="updateCS2Item(${item.id})">📝 Update</button>
+                            <button class="small" onclick="sellCS2Item(${item.id})" style="background: var(--accent);">💰 Sell</button>
+                            <button class="small danger" onclick="deleteCS2Item(${item.id})">🗑️ Delete</button>
+                        </div>
                         </div>
                     </div>
                 `;
@@ -1983,14 +2032,34 @@
 
         // Update transaction lists
         function updateTransactionLists() {
-            updateIncomeSummary();
-            updateExpenseSummary();
-            updateFullHistory();
+            try {
+                updateIncomeSummary();
+            } catch (error) {
+                console.error('Error updating income summary:', error);
+            }
+            
+            try {
+                updateExpenseSummary();
+            } catch (error) {
+                console.error('Error updating expense summary:', error);
+            }
+            
+            try {
+                updateFullHistory();
+            } catch (error) {
+                console.error('Error updating full history:', error);
+            }
         }
 
         function updateIncomeSummary() {
+            console.log('=== updateIncomeSummary called ===');
+            console.log('Total transactions:', financialData.transactions.length);
+            
             const now = new Date();
             const incomeTransactions = financialData.transactions.filter(t => t.type === 'income');
+            
+            console.log('Income transactions:', incomeTransactions.length);
+            console.log('Income data:', incomeTransactions);
 
             // Today
             const today = incomeTransactions.filter(t => {
@@ -2018,10 +2087,24 @@
                 return date.getFullYear() === now.getFullYear();
             }).reduce((sum, t) => sum + t.amount, 0);
 
-            document.getElementById('incomeToday').textContent = today.toFixed(0) + ' RON';
-            document.getElementById('incomeWeek').textContent = week.toFixed(0) + ' RON';
-            document.getElementById('incomeMonth').textContent = month.toFixed(0) + ' RON';
-            document.getElementById('incomeYear').textContent = year.toFixed(0) + ' RON';
+            console.log('Updating summary - Today:', today, 'Week:', week, 'Month:', month, 'Year:', year);
+
+            const incomeToday = document.getElementById('incomeToday');
+            const incomeWeek = document.getElementById('incomeWeek');
+            const incomeMonth = document.getElementById('incomeMonth');
+            const incomeYear = document.getElementById('incomeYear');
+            
+            console.log('Elements found:', {
+                incomeToday: !!incomeToday,
+                incomeWeek: !!incomeWeek,
+                incomeMonth: !!incomeMonth,
+                incomeYear: !!incomeYear
+            });
+
+            if (incomeToday) incomeToday.textContent = today.toFixed(0) + ' RON';
+            if (incomeWeek) incomeWeek.textContent = week.toFixed(0) + ' RON';
+            if (incomeMonth) incomeMonth.textContent = month.toFixed(0) + ' RON';
+            if (incomeYear) incomeYear.textContent = year.toFixed(0) + ' RON';
 
             if (document.getElementById('monthIncome')) {
                 document.getElementById('monthIncome').textContent = month.toFixed(0) + ' RON';
@@ -2029,8 +2112,12 @@
 
             // Recent income list
             const incomeList = document.getElementById('incomeList');
+            console.log('incomeList element found:', !!incomeList);
+            
             if (incomeList) {
                 const recent = incomeTransactions.slice(-10).reverse();
+                console.log('Recent income transactions (last 10):', recent);
+                
                 incomeList.innerHTML = recent.length > 0 ? recent.map(t => `
                     <div class="transaction-item income">
                         <div class="transaction-details">
@@ -2038,12 +2125,21 @@
                             <div class="transaction-description">${t.description || 'No description'}</div>
                             <div class="transaction-meta">${new Date(t.date).toLocaleString()} • ${t.paymentMethod}</div>
                         </div>
-                        <div class="transaction-amount" style="color: var(--accent);">
-                            +${t.amount.toFixed(2)} RON
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="transaction-amount" style="color: var(--accent);">
+                                +${t.amount.toFixed(2)} RON
+                            </div>
+                            <button onclick="deleteTransaction(${t.id})" class="small danger" style="padding: 0.5rem;">🗑️</button>
                         </div>
                     </div>
                 `).join('') : '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No income recorded yet</div>';
+                
+                console.log('incomeList HTML updated, length:', incomeList.innerHTML.length);
+            } else {
+                console.error('❌ incomeList element NOT FOUND!');
             }
+            
+            console.log('=== updateIncomeSummary complete ===');
         }
 
         function updateExpenseSummary() {
@@ -2100,8 +2196,11 @@
                             <div class="transaction-description">${t.description || 'No description'}</div>
                             <div class="transaction-meta">${new Date(t.date).toLocaleString()} • ${t.paymentMethod}</div>
                         </div>
-                        <div class="transaction-amount" style="color: var(--accent-red);">
-                            -${t.amount.toFixed(2)} RON
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="transaction-amount" style="color: var(--accent-red);">
+                                -${t.amount.toFixed(2)} RON
+                            </div>
+                            <button onclick="deleteTransaction(${t.id})" class="small danger" style="padding: 0.5rem;">🗑️</button>
                         </div>
                     </div>
                 `).join('') : '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No expenses recorded yet</div>';
@@ -2181,8 +2280,11 @@
                             <div class="transaction-description">${t.description || 'No description'}</div>
                             <div class="transaction-meta">${new Date(t.date).toLocaleString()}${t.paymentMethod ? ' • ' + t.paymentMethod : ''}</div>
                         </div>
-                        <div class="transaction-amount" style="color: ${amountColor};">
-                            ${amountSign}${t.amount.toFixed(2)} RON
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="transaction-amount" style="color: ${amountColor};">
+                                ${amountSign}${t.amount.toFixed(2)} RON
+                            </div>
+                            <button onclick="deleteTransaction(${t.id})" class="small danger" style="padding: 0.5rem;">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -2267,6 +2369,178 @@
             link.href = url;
             link.download = `financial-data-${new Date().toISOString().split('T')[0]}.json`;
             link.click();
+            alert('✅ Data exported successfully!');
+        }
+        
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!confirm('⚠️ Import will REPLACE ALL current data. Make sure you have a backup!\n\nContinue?')) {
+                event.target.value = ''; // Reset file input
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    
+                    // Validate the data structure
+                    if (!imported.cash && imported.cash !== 0) {
+                        throw new Error('Invalid data file - missing cash field');
+                    }
+                    
+                    // Merge/overwrite
+                    Object.assign(financialData, imported);
+                    
+                    saveData();
+                    updateAllDisplays();
+                    updateTransactionLists();
+                    
+                    alert('✅ Data imported successfully!\n\nPage will reload.');
+                    location.reload();
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert('❌ Error importing data: ' + error.message + '\n\nMake sure the file is a valid Financial OS export.');
+                }
+                
+                // Reset file input
+                event.target.value = '';
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        function deleteTransaction(id) {
+            if (!confirm('Delete this transaction?')) return;
+            
+            console.log('Deleting transaction:', id);
+            
+            // Find the transaction
+            const transaction = financialData.transactions.find(t => t.id === id);
+            if (!transaction) {
+                alert('❌ Transaction not found');
+                return;
+            }
+            
+            // Reverse the transaction's effect on cash/savings
+            if (transaction.type === 'income') {
+                if (transaction.paymentMethod === 'cash') {
+                    financialData.cash -= transaction.amount;
+                } else {
+                    financialData.savings -= transaction.amount;
+                }
+            } else if (transaction.type === 'expense') {
+                if (transaction.paymentMethod === 'cash') {
+                    financialData.cash += transaction.amount;
+                } else {
+                    financialData.savings += transaction.amount;
+                }
+            }
+            
+            // Remove from array
+            financialData.transactions = financialData.transactions.filter(t => t.id !== id);
+            
+            console.log('Transaction deleted, new count:', financialData.transactions.length);
+            
+            saveData();
+            updateAllDisplays();
+            updateTransactionLists();
+            
+            alert('✅ Transaction deleted');
+        }
+        
+        function updateCS2Item(id) {
+            const item = financialData.cs2Portfolio.find(i => i.id === id);
+            if (!item) {
+                alert('❌ Item not found');
+                return;
+            }
+            
+            const newValueEur = prompt(`Update current value for "${item.name}"\nCurrent: ${item.currentValueEur.toFixed(2)} EUR\n\nEnter new value (EUR):`, item.currentValueEur);
+            
+            if (newValueEur === null) return; // Cancelled
+            
+            const value = parseFloat(newValueEur);
+            if (isNaN(value) || value < 0) {
+                alert('❌ Invalid value');
+                return;
+            }
+            
+            item.currentValueEur = value;
+            item.currentValue = value * (financialData.market.eurRon || 5);
+            
+            saveData();
+            updateAllDisplays();
+            
+            alert('✅ Item value updated');
+        }
+        
+        function sellCS2Item(id) {
+            const item = financialData.cs2Portfolio.find(i => i.id === id);
+            if (!item) {
+                alert('❌ Item not found');
+                return;
+            }
+            
+            const confirmMsg = `Sell "${item.name}"?\n\nPurchase: ${item.purchasePriceEur.toFixed(2)} EUR\nCurrent: ${item.currentValueEur.toFixed(2)} EUR\nP/L: ${(item.currentValueEur - item.purchasePriceEur).toFixed(2)} EUR`;
+            
+            if (!confirm(confirmMsg)) return;
+            
+            const sellPriceEur = prompt(`Enter final sell price (EUR):`, item.currentValueEur);
+            if (sellPriceEur === null) return;
+            
+            const sellPrice = parseFloat(sellPriceEur);
+            if (isNaN(sellPrice) || sellPrice < 0) {
+                alert('❌ Invalid price');
+                return;
+            }
+            
+            const sellPriceRon = sellPrice * (financialData.market.eurRon || 5);
+            const plEur = sellPrice - item.purchasePriceEur;
+            const plRon = plEur * (financialData.market.eurRon || 5);
+            
+            // Add to savings
+            financialData.savings += sellPriceRon;
+            
+            // Record as income transaction
+            financialData.transactions.push({
+                id: Date.now(),
+                type: 'income',
+                source: 'cs2sale',
+                amount: sellPriceRon,
+                description: `Sold ${item.name} for ${sellPrice.toFixed(2)} EUR (P/L: ${plEur >= 0 ? '+' : ''}${plEur.toFixed(2)} EUR)`,
+                paymentMethod: 'bank',
+                date: new Date().toISOString(),
+                timestamp: Date.now()
+            });
+            
+            // Remove from portfolio
+            financialData.cs2Portfolio = financialData.cs2Portfolio.filter(i => i.id !== id);
+            
+            addXP(10, 'Sold CS2 item');
+            saveData();
+            updateAllDisplays();
+            
+            alert(`✅ Sold!\n\nProfit/Loss: ${plEur >= 0 ? '+' : ''}${plEur.toFixed(2)} EUR (${plRon.toFixed(0)} RON)\nAdded ${sellPriceRon.toFixed(0)} RON to savings`);
+        }
+        
+        function deleteCS2Item(id) {
+            const item = financialData.cs2Portfolio.find(i => i.id === id);
+            if (!item) {
+                alert('❌ Item not found');
+                return;
+            }
+            
+            if (!confirm(`Delete "${item.name}" from portfolio?\n\nThis will NOT refund money. Use "Sell" if you want to record a sale.`)) return;
+            
+            financialData.cs2Portfolio = financialData.cs2Portfolio.filter(i => i.id !== id);
+            
+            saveData();
+            updateAllDisplays();
+            
+            alert('✅ Item deleted');
         }
 
         function resetAllData() {
@@ -2354,9 +2628,9 @@
                 pullBtn.style.display = 'inline-block';
                 updateSyncStatus('Connected');
                 
-                // Auto-pull latest data on startup (safe - always downloads)
-                console.log('🔄 Auto-pulling latest data from GitHub...');
-                forcePullFromGist();
+                // Smart auto-pull: only pull if remote is newer
+                console.log('🔄 Checking if remote has newer data...');
+                pullFromGist(); // Uses version comparison, won't overwrite if local is newer
             } else if (!githubToken && connectBtn && syncBtn && pullBtn) {
                 console.log('❌ No token - showing connect button');
                 connectBtn.style.display = 'inline-block';
