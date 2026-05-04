@@ -2595,12 +2595,23 @@
         }
         
         function resetProgress() {
-            if (confirm('Reset your Level and XP? (Keeps all transactions and financial data)')) {
-                financialData.level = 1;
-                financialData.xp = 0;
+            if (confirm('Reset your Level and XP to 0? (Keeps all transactions and financial data)')) {
+                console.log('=== RESET PROGRESS ===');
+                console.log('Before - Level:', financialData.progress.level, 'XP:', financialData.progress.xp);
+                
+                financialData.progress.level = 1;
+                financialData.progress.xp = 0;
+                financialData.progress.xpToNext = 100;
+                
+                console.log('After - Level:', financialData.progress.level, 'XP:', financialData.progress.xp);
+                
                 saveData();
                 updateAllDisplays();
-                alert('✅ Level and XP reset to Level 1');
+                
+                console.log('Saved and updated displays');
+                console.log('=== RESET COMPLETE ===');
+                
+                alert('✅ Level and XP reset to Level 1!');
             }
         }
         
