@@ -1587,6 +1587,55 @@
             updateProgressDisplay();
         }
 
+        function createPieChart(data, total, colors) {
+            const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]);
+            const radius = 100;
+            const centerX = 120;
+            const centerY = 120;
+            
+            let currentAngle = -90; // Start at top
+            const slices = sorted.map(([label, value], idx) => {
+                const percentage = (value / total) * 100;
+                const sliceAngle = (value / total) * 360;
+                
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + sliceAngle;
+                
+                const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
+                const startY = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
+                const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
+                const endY = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
+                
+                const largeArcFlag = sliceAngle > 180 ? 1 : 0;
+                
+                const pathData = [
+                    `M ${centerX} ${centerY}`,
+                    `L ${startX} ${startY}`,
+                    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY}`,
+                    'Z'
+                ].join(' ');
+                
+                currentAngle = endAngle;
+                
+                // Calculate label position (middle of slice, 60% from center)
+                const labelAngle = (startAngle + endAngle) / 2;
+                const labelRadius = radius * 0.6;
+                const labelX = centerX + labelRadius * Math.cos((labelAngle * Math.PI) / 180);
+                const labelY = centerY + labelRadius * Math.sin((labelAngle * Math.PI) / 180);
+                
+                return `
+                    <path d="${pathData}" fill="${colors[idx % colors.length]}" stroke="#111" stroke-width="2"/>
+                    ${percentage > 5 ? `<text x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" fill="white" font-weight="700" font-size="16" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${percentage.toFixed(1)}%</text>` : ''}
+                `;
+            });
+            
+            return `
+                <svg viewBox="0 0 240 240" style="max-width: 240px; width: 100%; height: auto;">
+                    ${slices.join('')}
+                </svg>
+            `;
+        }
+
         function updateAnalytics() {
             const transactions = financialData.transactions || [];
             const now = new Date();
@@ -1664,22 +1713,30 @@
                 if (totalIncome === 0) {
                     incomeBreakdownEl.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No income data yet</div>';
                 } else {
-                    incomeBreakdownEl.innerHTML = Object.entries(incomeSources)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([source, amount]) => {
-                            const percentage = ((amount / totalIncome) * 100).toFixed(1);
-                            return `
-                                <div style="margin-bottom: 1rem;">
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                                        <span style="text-transform: capitalize;">${source}</span>
-                                        <span style="color: var(--accent); font-weight: 700;">${amount.toFixed(0)} RON (${percentage}%)</span>
-                                    </div>
-                                    <div style="background: var(--bg-secondary); height: 8px; border-radius: 4px; overflow: hidden;">
-                                        <div style="background: var(--accent); height: 100%; width: ${percentage}%;"></div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
+                    const incomePieChart = createPieChart(incomeSources, totalIncome, ['#00D9FF', '#00FF88', '#FF6B9D', '#FFB800', '#9D4EDD', '#06FFA5']);
+                    incomeBreakdownEl.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
+                            ${incomePieChart}
+                            <div style="width: 100%;">
+                                ${Object.entries(incomeSources)
+                                    .sort((a, b) => b[1] - a[1])
+                                    .map(([source, amount], idx) => {
+                                        const percentage = ((amount / totalIncome) * 100).toFixed(1);
+                                        const colors = ['#00D9FF', '#00FF88', '#FF6B9D', '#FFB800', '#9D4EDD', '#06FFA5'];
+                                        return `
+                                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                                <div style="width: 16px; height: 16px; background: ${colors[idx % colors.length]}; border-radius: 3px;"></div>
+                                                <div style="flex: 1;">
+                                                    <div style="text-transform: capitalize; font-weight: 600;">${source}</div>
+                                                    <div style="font-size: 0.85rem; color: var(--text-dim);">${amount.toFixed(0)} RON</div>
+                                                </div>
+                                                <div style="font-weight: 700; color: var(--accent);">${percentage}%</div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                            </div>
+                        </div>
+                    `;
                 }
             }
             
@@ -1688,22 +1745,30 @@
                 if (totalExpenses === 0) {
                     spendingBreakdownEl.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No expense data yet</div>';
                 } else {
-                    spendingBreakdownEl.innerHTML = Object.entries(expenseCategories)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([category, amount]) => {
-                            const percentage = ((amount / totalExpenses) * 100).toFixed(1);
-                            return `
-                                <div style="margin-bottom: 1rem;">
-                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                                        <span style="text-transform: capitalize;">${category}</span>
-                                        <span style="color: var(--accent-red); font-weight: 700;">${amount.toFixed(0)} RON (${percentage}%)</span>
-                                    </div>
-                                    <div style="background: var(--bg-secondary); height: 8px; border-radius: 4px; overflow: hidden;">
-                                        <div style="background: var(--accent-red); height: 100%; width: ${percentage}%;"></div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
+                    const expensePieChart = createPieChart(expenseCategories, totalExpenses, ['#FF6B6B', '#FF9B85', '#FFD93D', '#6BCF7F', '#4ECDC4', '#A8DADC']);
+                    spendingBreakdownEl.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem;">
+                            ${expensePieChart}
+                            <div style="width: 100%;">
+                                ${Object.entries(expenseCategories)
+                                    .sort((a, b) => b[1] - a[1])
+                                    .map(([category, amount], idx) => {
+                                        const percentage = ((amount / totalExpenses) * 100).toFixed(1);
+                                        const colors = ['#FF6B6B', '#FF9B85', '#FFD93D', '#6BCF7F', '#4ECDC4', '#A8DADC'];
+                                        return `
+                                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                                <div style="width: 16px; height: 16px; background: ${colors[idx % colors.length]}; border-radius: 3px;"></div>
+                                                <div style="flex: 1;">
+                                                    <div style="text-transform: capitalize; font-weight: 600;">${category}</div>
+                                                    <div style="font-size: 0.85rem; color: var(--text-dim);">${amount.toFixed(0)} RON</div>
+                                                </div>
+                                                <div style="font-weight: 700; color: var(--accent-red);">${percentage}%</div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                            </div>
+                        </div>
+                    `;
                 }
             }
             
