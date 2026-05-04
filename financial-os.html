@@ -1286,7 +1286,8 @@
                     <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importData(event)">
                     <button onclick="document.getElementById('importFileInput').click()" class="secondary">📤 Import Data (JSON)</button>
                 </div>
-                <button onclick="resetProgress()" class="danger" style="margin-top: 1rem;">Reset Progress (Keep Transactions)</button>
+                <button onclick="resetProgress()" class="danger" style="margin-top: 1rem;">🔄 Reset Level & XP</button>
+                <button onclick="resetMonthlyGoals()" class="secondary" style="margin-top: 0.5rem;">📋 Reset Monthly Goals</button>
                 <button onclick="resetAllData()" class="danger" style="margin-top: 0.5rem;">⚠️ DELETE EVERYTHING</button>
             </div>
         </div>
@@ -1406,6 +1407,14 @@
             <div class="modal-actions">
                 <button class="secondary" onclick="closeModal('gasModal')">Cancel</button>
                 <button onclick="fillGas()">Record Fill-Up</button>
+            </div>
+            <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem;">
+                <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Or manually set gas level:</div>
+                <div class="input-group">
+                    <label>Set Gas Level (%)</label>
+                    <input type="number" id="manualGasLevel" min="0" max="100" step="1" placeholder="0-100%" />
+                </div>
+                <button onclick="setGasLevel()" class="secondary" style="width: 100%;">Set Level</button>
             </div>
         </div>
     </div>
@@ -2029,6 +2038,22 @@
                 closeModal('gasModal');
             }
         }
+        
+        function setGasLevel() {
+            const newLevel = parseInt(document.getElementById('manualGasLevel').value);
+            
+            if (isNaN(newLevel) || newLevel < 0 || newLevel > 100) {
+                alert('Please enter a valid percentage (0-100)');
+                return;
+            }
+            
+            financialData.gasTank.currentPercent = newLevel;
+            saveData();
+            updateAllDisplays();
+            closeModal('gasModal');
+            
+            alert(`✅ Gas level set to ${newLevel}%`);
+        }
 
         // Update transaction lists
         function updateTransactionLists() {
@@ -2415,7 +2440,8 @@
         function deleteTransaction(id) {
             if (!confirm('Delete this transaction?')) return;
             
-            console.log('Deleting transaction:', id);
+            console.log('=== DELETE TRANSACTION ===');
+            console.log('Transaction ID:', id);
             
             // Find the transaction
             const transaction = financialData.transactions.find(t => t.id === id);
@@ -2424,20 +2450,34 @@
                 return;
             }
             
+            console.log('Transaction found:', transaction);
+            console.log('Type:', transaction.type);
+            console.log('Payment method:', transaction.paymentMethod);
+            console.log('Amount:', transaction.amount);
+            console.log('Current cash:', financialData.cash);
+            console.log('Current savings:', financialData.savings);
+            
             // Reverse the transaction's effect on cash/savings
             if (transaction.type === 'income') {
                 if (transaction.paymentMethod === 'cash') {
+                    console.log('Reversing income from cash');
                     financialData.cash -= transaction.amount;
                 } else {
+                    console.log('Reversing income from savings');
                     financialData.savings -= transaction.amount;
                 }
             } else if (transaction.type === 'expense') {
                 if (transaction.paymentMethod === 'cash') {
+                    console.log('Reversing expense to cash');
                     financialData.cash += transaction.amount;
                 } else {
+                    console.log('Reversing expense to savings');
                     financialData.savings += transaction.amount;
                 }
             }
+            
+            console.log('New cash:', financialData.cash);
+            console.log('New savings:', financialData.savings);
             
             // Remove from array
             financialData.transactions = financialData.transactions.filter(t => t.id !== id);
@@ -2447,6 +2487,8 @@
             saveData();
             updateAllDisplays();
             updateTransactionLists();
+            
+            console.log('=== DELETE COMPLETE ===');
             
             alert('✅ Transaction deleted');
         }
@@ -2549,6 +2591,29 @@
                     localStorage.removeItem('financialOS');
                     location.reload();
                 }
+            }
+        }
+        
+        function resetProgress() {
+            if (confirm('Reset your Level and XP? (Keeps all transactions and financial data)')) {
+                financialData.level = 1;
+                financialData.xp = 0;
+                saveData();
+                updateAllDisplays();
+                alert('✅ Level and XP reset to Level 1');
+            }
+        }
+        
+        function resetMonthlyGoals() {
+            if (confirm('Reset all monthly goal progress? (Progress will be set to 0)')) {
+                // Reset all goal progress
+                Object.keys(financialData.monthlyGoals).forEach(key => {
+                    financialData.monthlyGoals[key].current = 0;
+                });
+                
+                saveData();
+                updateAllDisplays();
+                alert('✅ Monthly goals reset');
             }
         }
 
