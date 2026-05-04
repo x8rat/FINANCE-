@@ -1587,6 +1587,144 @@
             updateProgressDisplay();
         }
 
+        function updateAnalytics() {
+            const transactions = financialData.transactions || [];
+            const now = new Date();
+            
+            // Monthly Comparison (last 6 months)
+            const monthlyData = {};
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const monthKey = date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+                monthlyData[monthKey] = { income: 0, expenses: 0 };
+            }
+            
+            transactions.forEach(t => {
+                const date = new Date(t.date);
+                const monthKey = date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+                if (monthlyData[monthKey]) {
+                    if (t.type === 'income') {
+                        monthlyData[monthKey].income += t.amount;
+                    } else if (t.type === 'expense') {
+                        monthlyData[monthKey].expenses += t.amount;
+                    }
+                }
+            });
+            
+            const monthlyComparisonEl = document.getElementById('monthlyComparison');
+            if (monthlyComparisonEl) {
+                monthlyComparisonEl.innerHTML = `
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 0.75rem; text-align: left;">Month</th>
+                                    <th style="padding: 0.75rem; text-align: right; color: var(--accent);">Income</th>
+                                    <th style="padding: 0.75rem; text-align: right; color: var(--accent-red);">Expenses</th>
+                                    <th style="padding: 0.75rem; text-align: right;">Net</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(monthlyData).map(([month, data]) => {
+                                    const net = data.income - data.expenses;
+                                    return `
+                                        <tr style="border-bottom: 1px solid var(--border);">
+                                            <td style="padding: 0.75rem;">${month}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: var(--accent);">+${data.income.toFixed(0)}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: var(--accent-red);">-${data.expenses.toFixed(0)}</td>
+                                            <td style="padding: 0.75rem; text-align: right; color: ${net >= 0 ? 'var(--accent)' : 'var(--accent-red)'}; font-weight: 700;">
+                                                ${net >= 0 ? '+' : ''}${net.toFixed(0)}
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            // Income Sources Breakdown
+            const incomeSources = {};
+            const expenseCategories = {};
+            
+            transactions.forEach(t => {
+                if (t.type === 'income' && t.source) {
+                    incomeSources[t.source] = (incomeSources[t.source] || 0) + t.amount;
+                } else if (t.type === 'expense' && t.category) {
+                    expenseCategories[t.category] = (expenseCategories[t.category] || 0) + t.amount;
+                }
+            });
+            
+            const totalIncome = Object.values(incomeSources).reduce((sum, val) => sum + val, 0);
+            const totalExpenses = Object.values(expenseCategories).reduce((sum, val) => sum + val, 0);
+            
+            const incomeBreakdownEl = document.getElementById('incomeBreakdown');
+            if (incomeBreakdownEl) {
+                if (totalIncome === 0) {
+                    incomeBreakdownEl.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No income data yet</div>';
+                } else {
+                    incomeBreakdownEl.innerHTML = Object.entries(incomeSources)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([source, amount]) => {
+                            const percentage = ((amount / totalIncome) * 100).toFixed(1);
+                            return `
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                        <span style="text-transform: capitalize;">${source}</span>
+                                        <span style="color: var(--accent); font-weight: 700;">${amount.toFixed(0)} RON (${percentage}%)</span>
+                                    </div>
+                                    <div style="background: var(--bg-secondary); height: 8px; border-radius: 4px; overflow: hidden;">
+                                        <div style="background: var(--accent); height: 100%; width: ${percentage}%;"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                }
+            }
+            
+            const spendingBreakdownEl = document.getElementById('spendingBreakdown');
+            if (spendingBreakdownEl) {
+                if (totalExpenses === 0) {
+                    spendingBreakdownEl.innerHTML = '<div style="text-align: center; color: var(--text-dim); padding: 2rem;">No expense data yet</div>';
+                } else {
+                    spendingBreakdownEl.innerHTML = Object.entries(expenseCategories)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([category, amount]) => {
+                            const percentage = ((amount / totalExpenses) * 100).toFixed(1);
+                            return `
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                        <span style="text-transform: capitalize;">${category}</span>
+                                        <span style="color: var(--accent-red); font-weight: 700;">${amount.toFixed(0)} RON (${percentage}%)</span>
+                                    </div>
+                                    <div style="background: var(--bg-secondary); height: 8px; border-radius: 4px; overflow: hidden;">
+                                        <div style="background: var(--accent-red); height: 100%; width: ${percentage}%;"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                }
+            }
+            
+            // Net Worth Trend (placeholder - would need historical tracking)
+            const netWorthTrendEl = document.getElementById('netWorthTrend');
+            if (netWorthTrendEl) {
+                const currentNetWorth = calculateNetWorth();
+                netWorthTrendEl.innerHTML = `
+                    <div style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Current Net Worth</div>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: ${currentNetWorth >= 0 ? 'var(--accent)' : 'var(--accent-red)'};">
+                            ${currentNetWorth.toLocaleString()} RON
+                        </div>
+                        <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-dim);">
+                            Historical tracking coming soon
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         function updateProgressDisplay() {
             const { level, xp, xpToNext } = financialData.progress;
             document.getElementById('currentLevel').textContent = level;
@@ -1727,6 +1865,12 @@
                     updateCS2Holdings();
                 } catch (e) {
                     console.error('Error in updateCS2Holdings:', e);
+                }
+                
+                try {
+                    updateAnalytics();
+                } catch (e) {
+                    console.error('Error in updateAnalytics:', e);
                 }
             } catch (error) {
                 console.error('Error in updateAllDisplays:', error);
