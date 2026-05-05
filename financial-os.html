@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Operating System</title>
-    <!-- Version: 2.0 - Fixed Save Functions + GitHub Sync -->
+    <title>Financial Operating System v2.0</title>
+    <!-- Version: 2.0 - Optimized + Subscription Management -->
     
     <!-- Mobile Console for Debugging -->
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>
-        // Only show console on mobile or when URL has ?debug
         if (window.innerWidth < 768 || window.location.search.includes('debug')) {
             eruda.init();
         }
@@ -169,24 +168,76 @@
             right: 0.5rem;
             color: var(--accent);
             font-size: 1.2rem;
-        }
-        
-        .goal-title {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-        }
-        
-        .goal-progress {
-            font-size: 1.1rem;
             font-weight: 700;
         }
         
-        .goal-target {
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+        
+        .goal-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .goal-progress {
             font-size: 0.8rem;
             color: var(--text-dim);
-            margin-top: 0.25rem;
+        }
+        
+        .goal-bar {
+            height: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        
+        .goal-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.5s ease;
+        }
+        
+        .goal-badge {
+            display: inline-block;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        /* Market Ticker */
+        .market-ticker {
+            display: flex;
+            gap: 2rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+        
+        .ticker-item {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            white-space: nowrap;
+        }
+        
+        .ticker-label {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+        
+        .ticker-value {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        
+        .ticker-value.green {
+            color: var(--accent);
         }
         
         /* Navigation */
@@ -194,40 +245,31 @@
             display: flex;
             gap: 0.5rem;
             margin-bottom: 2rem;
-            flex-wrap: wrap;
-            border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
         }
         
         .nav-btn {
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem 1.5rem;
             font-family: 'IBM Plex Mono', monospace;
             font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
             cursor: pointer;
-            position: relative;
             transition: all 0.2s;
-        }
-        
-        .nav-btn.active {
-            color: var(--accent);
-        }
-        
-        .nav-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--accent);
+            white-space: nowrap;
         }
         
         .nav-btn:hover {
-            color: var(--text);
+            background: var(--bg-card);
+            border-color: var(--accent);
+        }
+        
+        .nav-btn.active {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
         }
         
         /* Tab Content */
@@ -244,14 +286,14 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
         
         .grid-3 {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
         
         /* Cards */
@@ -259,11 +301,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             padding: 1.5rem;
-            transition: border-color 0.3s;
-        }
-        
-        .card:hover {
-            border-color: var(--accent);
+            margin-bottom: 1.5rem;
         }
         
         .card-header {
@@ -271,37 +309,32 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border);
         }
         
         .card-title {
-            font-size: 0.75rem;
             color: var(--text-dim);
+            font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
         
         .card-value {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
-            line-height: 1;
             margin: 1rem 0;
         }
         
         .card-value.green { color: var(--accent); }
         .card-value.red { color: var(--accent-red); }
-        .card-value.blue { color: var(--accent-blue); }
         .card-value.yellow { color: var(--accent-yellow); }
+        .card-value.blue { color: var(--accent-blue); }
         .card-value.purple { color: var(--accent-purple); }
         
-        /* Stats */
         .stat-row {
             display: flex;
             justify-content: space-between;
             padding: 0.75rem 0;
             border-bottom: 1px solid var(--border);
-            font-size: 0.9rem;
         }
         
         .stat-row:last-child {
@@ -310,27 +343,30 @@
         
         .stat-label {
             color: var(--text-dim);
+            font-size: 0.9rem;
         }
         
         .stat-value {
             font-weight: 600;
         }
         
-        /* Input Groups */
+        /* Forms */
         .input-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
         
-        label {
+        .input-group label {
             display: block;
-            font-size: 0.75rem;
             color: var(--text-dim);
+            font-size: 0.85rem;
             margin-bottom: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         
-        input, select, textarea {
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
             width: 100%;
             background: var(--bg-secondary);
             border: 1px solid var(--border);
@@ -338,13 +374,13 @@
             padding: 0.75rem;
             font-family: 'IBM Plex Mono', monospace;
             font-size: 0.9rem;
-            transition: all 0.2s;
         }
         
-        input:focus, select:focus, textarea:focus {
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
             outline: none;
             border-color: var(--accent);
-            background: var(--bg);
         }
         
         /* Buttons */
@@ -354,27 +390,37 @@
             border: none;
             padding: 0.75rem 1.5rem;
             font-family: 'IBM Plex Mono', monospace;
-            font-weight: 700;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
         }
         
         button:hover {
+            background: var(--accent-blue);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
         }
         
         button.secondary {
-            background: transparent;
-            border: 1px solid var(--border);
+            background: var(--bg-secondary);
             color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        button.secondary:hover {
+            background: var(--bg-card);
+            border-color: var(--accent);
         }
         
         button.danger {
             background: var(--accent-red);
+            color: var(--text);
+        }
+        
+        button.danger:hover {
+            background: #ff1a4d;
         }
         
         button.small {
@@ -382,86 +428,7 @@
             font-size: 0.75rem;
         }
         
-        /* Transaction List */
-        .transaction-list {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        
-        .transaction-item {
-            background: var(--bg-secondary);
-            border-left: 3px solid var(--accent-blue);
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .transaction-item.income {
-            border-left-color: var(--accent);
-        }
-        
-        .transaction-item.expense {
-            border-left-color: var(--accent-red);
-        }
-        
-        .transaction-item.cs2 {
-            border-left-color: var(--accent-purple);
-        }
-        
-        .transaction-details {
-            flex: 1;
-        }
-        
-        .transaction-type {
-            font-size: 0.7rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-        }
-        
-        .transaction-description {
-            font-size: 0.95rem;
-            margin-top: 0.25rem;
-        }
-        
-        .transaction-meta {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            margin-top: 0.25rem;
-        }
-        
-        .transaction-amount {
-            font-size: 1.3rem;
-            font-weight: 700;
-        }
-        
-        /* Alerts */
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-left: 4px solid;
-        }
-        
-        .alert.success {
-            background: rgba(0, 255, 136, 0.1);
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        
-        .alert.warning {
-            background: rgba(255, 204, 0, 0.1);
-            border-color: var(--accent-yellow);
-            color: var(--accent-yellow);
-        }
-        
-        .alert.danger {
-            background: rgba(255, 51, 102, 0.1);
-            border-color: var(--accent-red);
-            color: var(--accent-red);
-        }
-        
-        /* Modal */
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
@@ -469,11 +436,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.9);
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            overflow-y: auto;
+            padding: 2rem;
         }
         
         .modal.active {
@@ -482,58 +449,252 @@
         
         .modal-content {
             background: var(--bg-card);
-            border: 2px solid var(--accent);
+            border: 1px solid var(--border);
             padding: 2rem;
             max-width: 600px;
-            width: 90%;
+            width: 100%;
             max-height: 90vh;
             overflow-y: auto;
-            margin: 2rem;
         }
         
         .modal-header {
-            font-family: 'Archivo Black', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
             margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
             text-transform: uppercase;
         }
         
         .modal-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
             gap: 1rem;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
         }
         
-        /* Live Market Data */
-        .market-ticker {
+        .modal-actions button {
+            flex: 1;
+        }
+        
+        /* Gas Tank */
+        .gas-tank {
+            width: 100px;
+            height: 200px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            position: relative;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        
+        .tank-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(180deg, var(--accent-yellow), var(--accent));
+            transition: height 0.5s ease;
+        }
+        
+        .tank-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 700;
+            font-size: 1.2rem;
+            z-index: 1;
+            mix-blend-mode: difference;
+        }
+        
+        /* Transaction Lists */
+        .transaction-item {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
-            padding: 0.75rem 1rem;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
             display: flex;
-            gap: 2rem;
-            overflow-x: auto;
-            margin-bottom: 2rem;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .transaction-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .transaction-desc {
             font-size: 0.85rem;
-        }
-        
-        .ticker-item {
-            white-space: nowrap;
-        }
-        
-        .ticker-label {
             color: var(--text-dim);
-            margin-right: 0.5rem;
+            margin-bottom: 0.25rem;
         }
         
-        .ticker-value {
+        .transaction-date {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        .transaction-amount {
+            font-size: 1.2rem;
             font-weight: 700;
-            color: var(--accent);
         }
         
-        /* Responsive */
+        .transaction-amount.green { color: var(--accent); }
+        .transaction-amount.red { color: var(--accent-red); }
+        
+        .delete-btn {
+            background: transparent;
+            color: var(--accent-red);
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: none;
+        }
+        
+        .delete-btn:hover {
+            background: var(--accent-red);
+            color: var(--text);
+        }
+        
+        /* CS2 Items */
+        .cs2-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .cs2-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .cs2-details {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 0.25rem;
+        }
+        
+        .cs2-notes {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-style: italic;
+        }
+        
+        .cs2-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .cs2-profit {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .cs2-profit.green { color: var(--accent); }
+        .cs2-profit.red { color: var(--accent-red); }
+        
+        .cs2-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Analytics */
+        canvas {
+            max-width: 100%;
+            height: 300px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Utility Classes */
+        .green { color: var(--accent); }
+        .red { color: var(--accent-red); }
+        .yellow { color: var(--accent-yellow); }
+        .blue { color: var(--accent-blue); }
+        .purple { color: var(--accent-purple); }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 2px;
+        }
+        
+        .badge-green {
+            background: var(--accent);
+            color: var(--bg);
+        }
+        
+        .badge-red {
+            background: var(--accent-red);
+            color: var(--text);
+        }
+
+        /* Subscription Management */
+        .subscription-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subscription-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .subscription-amount {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .subscription-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 2px;
+        }
+
+        .subscription-status.active {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .subscription-status.inactive {
+            background: var(--bg);
+            color: var(--text-dim);
+        }
+
+        .subscription-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Mobile Responsive */
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -544,168 +705,34 @@
             }
             
             h1 {
-                font-size: 1.3rem;
-                letter-spacing: 0;
-            }
-            
-            .subtitle {
-                font-size: 0.7rem;
-                letter-spacing: 1px;
+                font-size: 1.5rem;
             }
             
             .grid-2, .grid-3 {
                 grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            nav {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                margin-bottom: 1rem;
-                gap: 0.25rem;
-            }
-            
-            .nav-btn {
-                padding: 0.75rem 1rem;
-                font-size: 0.75rem;
-                white-space: nowrap;
-            }
-            
-            .card {
-                padding: 1rem;
-            }
-            
-            .card-value {
-                font-size: 2rem;
-            }
-            
-            .modal-content {
-                width: 95%;
-                padding: 1.5rem;
-                margin: 1rem;
-            }
-            
-            .modal-header {
-                font-size: 1.2rem;
-            }
-            
-            .modal-actions {
-                grid-template-columns: 1fr;
-            }
-            
-            button {
-                padding: 1rem 1.5rem;
-                font-size: 0.85rem;
-            }
-            
-            .transaction-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.75rem;
-            }
-            
-            .transaction-amount {
-                font-size: 1.5rem;
             }
             
             .market-ticker {
                 flex-direction: column;
                 gap: 0.75rem;
-                padding: 1rem;
             }
             
-            .ticker-item {
-                display: flex;
-                justify-content: space-between;
-                width: 100%;
+            nav {
+                flex-wrap: wrap;
             }
             
-            .progress-system {
-                margin-top: 1.5rem;
-                padding-top: 1.5rem;
+            .modal-content {
+                padding: 1.5rem;
             }
             
-            .progress-level {
-                font-size: 1.2rem;
-            }
-            
-            .progress-xp {
-                font-size: 0.8rem;
-            }
-            
-            .monthly-goals {
-                grid-template-columns: 1fr;
-            }
-            
-            /* Better touch targets */
-            input, select, textarea {
-                padding: 1rem;
-                font-size: 16px; /* Prevents zoom on iOS */
-            }
-            
-            /* Fix for iOS safe areas */
-            @supports (padding: max(0px)) {
-                .container {
-                    padding-left: max(1rem, env(safe-area-inset-left));
-                    padding-right: max(1rem, env(safe-area-inset-right));
-                    padding-bottom: max(1rem, env(safe-area-inset-bottom));
-                }
-            }
-            
-            /* Horizontal scroll for nav */
-            nav::-webkit-scrollbar {
-                height: 4px;
-            }
-            
-            nav::-webkit-scrollbar-track {
-                background: var(--bg-secondary);
-            }
-            
-            nav::-webkit-scrollbar-thumb {
-                background: var(--border);
-            }
-            
-            /* Make transaction lists more thumb-friendly */
-            .transaction-list {
-                max-height: 400px;
-            }
-            
-            /* Better gas tank display on mobile */
-            .card > div[style*="grid-template-columns: 2fr 1fr"] {
-                grid-template-columns: 1fr !important;
-                gap: 1rem !important;
-            }
-            
-            .stat-row {
-                padding: 0.5rem 0;
-                font-size: 0.85rem;
-            }
-            
-            /* GitHub sync buttons on mobile */
             #syncStatus {
                 position: static !important;
                 flex-direction: column;
                 margin-top: 1rem;
-                padding-top: 1rem;
-                border-top: 1px solid var(--border);
-                gap: 0.75rem !important;
             }
             
             #syncStatus button {
                 width: 100%;
-                padding: 0.75rem !important;
-            }
-            
-            /* Better modal scrolling on mobile */
-            .modal-content {
-                max-height: 85vh;
-                overflow-y: auto;
-            }
-            
-            /* Larger touch targets for small buttons */
-            button.small {
-                padding: 0.75rem 1rem !important;
-                font-size: 0.85rem !important;
             }
         }
     </style>
@@ -849,7 +876,7 @@
                     </div>
                     <div class="card-value blue" id="dashNetWorth">-8,817</div>
                     <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 1rem;">
-                        Cash (233) + Savings (1,950) + CS2 (0) - Debt (11,000)
+                        Cash + Savings + CS2 - Debt
                     </div>
                 </div>
             </div>
@@ -876,22 +903,14 @@
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Monthly Subscriptions</span>
+                        <button class="small" onclick="openModal('manageSubscriptionsModal')">Manage</button>
                     </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Claude Pro</span>
-                        <span class="stat-value"><span id="claudeProRon">~105</span> RON <span style="color: var(--text-dim); font-size: 0.8rem;">(21 EUR)</span></span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">CLO3D</span>
-                        <span class="stat-value"><span id="clo3dRon">~262</span> RON <span style="color: var(--text-dim); font-size: 0.8rem;">(57 USD)</span></span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Canva (inactive)</span>
-                        <span class="stat-value" style="color: var(--text-dim);">160 RON/mo</span>
+                    <div id="dashboardSubscriptionsList">
+                        <!-- Will be populated dynamically -->
                     </div>
                     <div class="stat-row" style="border-top: 1px solid var(--border); margin-top: 0.5rem; padding-top: 0.75rem;">
                         <span class="stat-label">Total Active</span>
-                        <span class="stat-value" id="totalSubsRon">~367 RON/mo</span>
+                        <span class="stat-value" id="dashTotalSubs">0 RON/mo</span>
                     </div>
                 </div>
             </div>
@@ -899,24 +918,29 @@
             <!-- Gas Tracker -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Gas Tank & Fuel Tracker</span>
+                    <span class="card-title">Gas Tank Tracker</span>
                 </div>
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
-                    <div>
-                        <div style="margin-bottom: 1rem;">
-                            <span style="color: var(--text-dim); font-size: 0.9rem;">Current Level:</span>
-                            <span style="font-size: 1.5rem; font-weight: 700; margin-left: 1rem;" id="gasLevel">13%</span>
+                <div class="grid-2">
+                    <div style="text-align: center;">
+                        <div class="gas-tank">
+                            <div class="tank-fill" id="tankFill" style="height: 13%"></div>
+                            <div class="tank-label" id="tankPercent">13%</div>
                         </div>
-                        <div class="progress-bar-container" style="height: 16px;">
-                            <div class="progress-bar-fill" id="gasBar" style="width: 13%; background: var(--accent-red);"></div>
-                        </div>
-                        <div style="margin-top: 1rem; font-size: 0.85rem;">
-                            <span style="color: var(--text-dim);">Tank Capacity:</span> 42 L
-                            <span style="margin-left: 1.5rem; color: var(--text-dim);">Current Price:</span> <span id="currentGasPrice">9.02</span> RON/L
+                        <div style="margin-top: 1rem; color: var(--text-dim); font-size: 0.9rem;">
+                            <span id="tankLiters">5.5L</span> / 42L capacity
                         </div>
                     </div>
                     <div>
-                        <button onclick="openModal('gasModal')" style="width: 100%;">Fill Up Gas</button>
+                        <div class="stat-row">
+                            <span class="stat-label">Fill Cost (to 100%)</span>
+                            <span class="stat-value" id="fillCost">329.53 RON</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Fills This Month</span>
+                            <span class="stat-value" id="fillsThisMonth">0</span>
+                        </div>
+                        <button onclick="fillGas()" style="width: 100%; margin-top: 1rem;">⛽ Fill Tank</button>
+                        <button onclick="openModal('gasLevelModal')" class="secondary" style="width: 100%; margin-top: 0.5rem;">Set Level Manually</button>
                     </div>
                 </div>
             </div>
@@ -924,61 +948,61 @@
 
         <!-- INCOME TAB -->
         <div id="income" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Record Income</span>
-                </div>
-                <div class="grid-2">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Add Income</span>
+                    </div>
                     <div class="input-group">
                         <label>Source</label>
                         <select id="incomeSource">
-                            <option value="salary">Salary</option>
-                            <option value="roblox">Roblox</option>
-                            <option value="freelance">Freelance</option>
-                            <option value="gift">Gift</option>
-                            <option value="other">Other</option>
+                            <option>Salary</option>
+                            <option>Roblox</option>
+                            <option>Freelance</option>
+                            <option>Gift</option>
+                            <option>Other</option>
                         </select>
                     </div>
                     <div class="input-group">
                         <label>Amount (RON)</label>
                         <input type="number" id="incomeAmount" step="0.01" />
                     </div>
+                    <div class="input-group">
+                        <label>Description</label>
+                        <input type="text" id="incomeDescription" placeholder="Optional notes" />
+                    </div>
+                    <div class="input-group">
+                        <label>Payment Method</label>
+                        <select id="incomePaymentMethod">
+                            <option>Bank Transfer</option>
+                            <option>Cash</option>
+                            <option>PayPal</option>
+                            <option>Robux/DevEx</option>
+                        </select>
+                    </div>
+                    <button onclick="addIncome()">+ Add Income</button>
                 </div>
-                <div class="input-group">
-                    <label>Description</label>
-                    <input type="text" id="incomeDescription" placeholder="e.g., May salary, 3D model commission" />
-                </div>
-                <div class="input-group">
-                    <label>Payment Method</label>
-                    <select id="incomePaymentMethod">
-                        <option value="bank">Bank Transfer</option>
-                        <option value="cash">Cash</option>
-                        <option value="paypal">PayPal</option>
-                        <option value="robux">Robux/DevEx</option>
-                    </select>
-                </div>
-                <button onclick="addIncome()">Record Income</button>
-            </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Income Summary</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Today</span>
-                    <span class="stat-value green" id="incomeTod ay">0 RON</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">This Week</span>
-                    <span class="stat-value green" id="incomeWeek">0 RON</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">This Month</span>
-                    <span class="stat-value green" id="incomeMonth">0 RON</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">This Year</span>
-                    <span class="stat-value green" id="incomeYear">0 RON</span>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Summary</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Today</span>
+                        <span class="stat-value green" id="incomeTodaySummary">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">This Week</span>
+                        <span class="stat-value green" id="incomeWeekSummary">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">This Month</span>
+                        <span class="stat-value green" id="incomeMonthSummary">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">This Year</span>
+                        <span class="stat-value green" id="incomeYearSummary">0</span>
+                    </div>
                 </div>
             </div>
 
@@ -986,187 +1010,170 @@
                 <div class="card-header">
                     <span class="card-title">Recent Income</span>
                 </div>
-                <div class="transaction-list" id="incomeList"></div>
+                <div id="recentIncomeList">
+                    <!-- Will be populated dynamically -->
+                </div>
             </div>
         </div>
 
         <!-- EXPENSES TAB -->
         <div id="expenses" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Record Expense</span>
-                </div>
-                <div class="grid-2">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Add Expense</span>
+                    </div>
                     <div class="input-group">
                         <label>Category</label>
                         <select id="expenseCategory">
-                            <option value="gas">Gas/Fuel</option>
-                            <option value="loan">Loan Payment</option>
-                            <option value="food">Food/Groceries</option>
-                            <option value="eating_out">Eating Out</option>
-                            <option value="subscription">Subscription</option>
-                            <option value="car">Car Maintenance</option>
-                            <option value="insurance">Insurance</option>
-                            <option value="entertainment">Entertainment</option>
-                            <option value="gifts">Gifts</option>
-                            <option value="shopping">Shopping</option>
-                            <option value="misc">Miscellaneous</option>
+                            <option>Food</option>
+                            <option>Gas</option>
+                            <option>Shopping</option>
+                            <option>Utilities</option>
+                            <option>Entertainment</option>
+                            <option>Health</option>
+                            <option>Transport</option>
+                            <option>Subscription</option>
+                            <option>Other</option>
                         </select>
                     </div>
                     <div class="input-group">
                         <label>Amount (RON)</label>
                         <input type="number" id="expenseAmount" step="0.01" />
                     </div>
+                    <div class="input-group">
+                        <label>Description</label>
+                        <input type="text" id="expenseDescription" placeholder="Optional notes" />
+                    </div>
+                    <div class="input-group">
+                        <label>Payment Method</label>
+                        <select id="expensePaymentMethod">
+                            <option>Cash</option>
+                            <option>Bank Card</option>
+                            <option>Bank Transfer</option>
+                            <option>PayPal</option>
+                        </select>
+                    </div>
+                    <button onclick="addExpense()">- Add Expense</button>
                 </div>
-                <div class="input-group">
-                    <label>Description</label>
-                    <input type="text" id="expenseDescription" placeholder="e.g., Weekly groceries, Car oil change" />
-                </div>
-                <div class="input-group">
-                    <label>Payment Method</label>
-                    <select id="expensePaymentMethod">
-                        <option value="cash">Cash</option>
-                        <option value="card">Debit Card</option>
-                        <option value="bank">Bank Transfer</option>
-                    </select>
-                </div>
-                <button onclick="addExpense()">Record Expense</button>
-            </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Expense Summary</span>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Summary</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Today</span>
+                        <span class="stat-value red" id="expenseTodaySummary">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">This Week</span>
+                        <span class="stat-value red" id="expenseWeekSummary">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">This Month</span>
+                        <span class="stat-value red" id="expenseMonthSummary">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">This Year</span>
+                        <span class="stat-value red" id="expenseYearSummary">0</span>
+                    </div>
                 </div>
-                <div class="stat-row">
-                    <span class="stat-label">Today</span>
-                    <span class="stat-value red" id="expenseToday">0 RON</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">This Week</span>
-                    <span class="stat-value red" id="expenseWeek">0 RON</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">This Month</span>
-                    <span class="stat-value red" id="expenseMonth">0 RON</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">This Year</span>
-                    <span class="stat-value red" id="expenseYear">0 RON</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Expense Breakdown (This Month)</span>
-                </div>
-                <div id="expenseBreakdown"></div>
             </div>
 
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Recent Expenses</span>
                 </div>
-                <div class="transaction-list" id="expenseList"></div>
+                <div id="recentExpenseList">
+                    <!-- Will be populated dynamically -->
+                </div>
             </div>
         </div>
 
         <!-- CS2 INVESTMENTS TAB -->
         <div id="cs2" class="tab-content">
-            <div class="alert warning" style="margin-bottom: 1.5rem;">
-                ⚠️ Connect to PriceEmpire to sync your CS2 portfolio automatically
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Add CS2 Investment</span>
-                </div>
-                <div class="grid-2">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Add CS2 Item</span>
+                    </div>
                     <div class="input-group">
                         <label>Item Name</label>
-                        <input type="text" id="cs2ItemName" placeholder="e.g., AK-47 | Redline (Field-Tested)" />
+                        <input type="text" id="cs2ItemName" placeholder="e.g., AK-47 | Redline" />
                     </div>
                     <div class="input-group">
                         <label>Quantity</label>
                         <input type="number" id="cs2Quantity" value="1" min="1" />
                     </div>
-                </div>
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>Purchase Price (EUR)</label>
-                        <input type="number" id="cs2PurchasePrice" step="0.01" />
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Purchase Price (EUR)</label>
+                            <input type="number" id="cs2PurchasePrice" step="0.01" />
+                        </div>
+                        <div class="input-group">
+                            <label>Current Value (EUR)</label>
+                            <input type="number" id="cs2CurrentValue" step="0.01" />
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Platform</label>
+                            <select id="cs2Platform">
+                                <option>Steam</option>
+                                <option>CSGOFloat</option>
+                                <option>Buff163</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Classification</label>
+                            <select id="cs2Classification">
+                                <option>Skin</option>
+                                <option>Sticker</option>
+                                <option>Case</option>
+                                <option>Agent</option>
+                                <option>Gloves</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="input-group">
-                        <label>Current Value (EUR)</label>
-                        <input type="number" id="cs2CurrentValue" step="0.01" />
+                        <label>Notes</label>
+                        <textarea id="cs2Notes" rows="2" placeholder="Optional notes"></textarea>
                     </div>
+                    <button onclick="addCS2Item()">+ Add to Portfolio</button>
                 </div>
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>Platform</label>
-                        <select id="cs2Platform">
-                            <option value="steam">Steam Market</option>
-                            <option value="buff163">Buff163</option>
-                            <option value="csdeals">CS.Deals</option>
-                            <option value="skinport">Skinport</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Classification</label>
-                        <select id="cs2Classification">
-                            <option value="long_term">Long-term Hold</option>
-                            <option value="short_term">Short-term Flip</option>
-                            <option value="personal">Personal Use</option>
-                            <option value="high_risk">High Risk</option>
-                            <option value="safe">Safe/Stable</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>Notes</label>
-                    <textarea id="cs2Notes" rows="2" placeholder="Reason for purchase, market analysis, etc."></textarea>
-                </div>
-                <div style="background: var(--bg-secondary); padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
-                    <strong>RON Equivalent:</strong> <span id="cs2PurchaseRon">0</span> RON (using live EUR/RON rate)
-                </div>
-                <button onclick="addCS2Investment()">Add Investment</button>
-            </div>
 
-            <div class="grid-3">
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">Portfolio Value</span>
+                        <span class="card-title">Portfolio Summary</span>
                     </div>
-                    <div class="card-value purple" id="cs2TotalValue">0</div>
-                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
-                        <span id="cs2TotalRon">0 RON</span>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Value</span>
+                        <span class="stat-value purple" id="cs2TotalValue">0 EUR</span>
                     </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Unrealized P/L</span>
+                    <div class="stat-row">
+                        <span class="stat-label">Total Items</span>
+                        <span class="stat-value" id="cs2TotalItems">0</span>
                     </div>
-                    <div class="card-value" id="cs2UnrealizedPL">0</div>
-                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
-                        <span id="cs2UnrealizedRon">0 RON</span>
+                    <div class="stat-row">
+                        <span class="stat-label">Unrealized P/L</span>
+                        <span class="stat-value" id="cs2TotalProfit">0 EUR</span>
                     </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Realized P/L</span>
-                    </div>
-                    <div class="card-value" id="cs2RealizedPL">0</div>
-                    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
-                        <span id="cs2RealizedRon">0 RON</span>
+                    <div class="stat-row">
+                        <span class="stat-label">Value in RON</span>
+                        <span class="stat-value" id="cs2ValueRon">0 RON</span>
                     </div>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Current Holdings</span>
+                    <span class="card-title">Holdings</span>
                 </div>
-                <div id="cs2Holdings"></div>
+                <div id="cs2HoldingsList">
+                    <!-- Will be populated dynamically -->
+                </div>
             </div>
         </div>
 
@@ -1174,41 +1181,11 @@
         <div id="history" class="tab-content">
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Filter & Search</span>
+                    <span class="card-title">All Transactions</span>
                 </div>
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>Date Range</label>
-                        <select id="historyRange" onchange="filterHistory()">
-                            <option value="today">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                            <option value="year">This Year</option>
-                            <option value="all">All Time</option>
-                            <option value="custom">Custom Range</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Transaction Type</label>
-                        <select id="historyType" onchange="filterHistory()">
-                            <option value="all">All Types</option>
-                            <option value="income">Income Only</option>
-                            <option value="expense">Expenses Only</option>
-                            <option value="cs2">CS2 Only</option>
-                        </select>
-                    </div>
+                <div id="fullHistoryList">
+                    <!-- Will be populated dynamically -->
                 </div>
-                <div class="input-group">
-                    <label>Search</label>
-                    <input type="text" id="historySearch" placeholder="Search by description, category, amount..." oninput="filterHistory()" />
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Transaction History (<span id="historyCount">0</span> records)</span>
-                </div>
-                <div class="transaction-list" id="fullHistory" style="max-height: 700px;"></div>
             </div>
         </div>
 
@@ -1216,9 +1193,21 @@
         <div id="analytics" class="tab-content">
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Monthly Comparison</span>
+                    <span class="card-title">Monthly Comparison (Last 6 Months)</span>
                 </div>
-                <div id="monthlyComparison"></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Income</th>
+                            <th>Expenses</th>
+                            <th>Net</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyComparisonBody">
+                        <!-- Will be populated dynamically -->
+                    </tbody>
+                </table>
             </div>
 
             <div class="grid-2">
@@ -1226,26 +1215,38 @@
                     <div class="card-header">
                         <span class="card-title">Income Sources</span>
                     </div>
-                    <div id="incomeBreakdown"></div>
+                    <canvas id="incomeChart"></canvas>
                 </div>
+
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Spending Categories</span>
                     </div>
-                    <div id="spendingBreakdown"></div>
+                    <canvas id="expenseChart"></canvas>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Net Worth Trend</span>
+                    <span class="card-title">Current Net Worth</span>
                 </div>
-                <div id="netWorthTrend"></div>
+                <div class="card-value blue" id="analyticsNetWorth">0 RON</div>
             </div>
         </div>
 
         <!-- SETTINGS TAB -->
         <div id="settings" class="tab-content">
+            <!-- Subscription Management -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Manage Subscriptions</span>
+                    <button class="small" onclick="openModal('addSubscriptionModal')">+ Add New</button>
+                </div>
+                <div id="subscriptionsList">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Gas Price Settings</span>
@@ -1254,27 +1255,7 @@
                     <label>E95 Price (RON/L)</label>
                     <input type="number" id="settingsGasPrice" step="0.01" />
                 </div>
-                <button onclick="updateGasPrice()">Update Gas Price</button>
-                <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-dim);">
-                    Current MOL price from gazonline.ro: 9.02 RON/L (last updated today)
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Monthly Settings</span>
-                </div>
-                <div class="grid-2">
-                    <div class="input-group">
-                        <label>Monthly Salary</label>
-                        <input type="number" id="settingsSalary" value="3300" />
-                    </div>
-                    <div class="input-group">
-                        <label>Monthly Loan Payment</label>
-                        <input type="number" id="settingsLoan" value="1000" />
-                    </div>
-                </div>
-                <button onclick="updateMonthlySettings()">Save Settings</button>
+                <button onclick="updateGasPriceSettings()">Update Gas Price</button>
             </div>
 
             <div class="card">
@@ -1283,7 +1264,7 @@
                 </div>
                 <button onclick="exportData()" class="secondary">📥 Export All Data (JSON)</button>
                 <div style="margin-top: 1rem;">
-                    <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importData(event)">
+                    <input type="file" id="importFileInput" accept=".json" style="display: none;">
                     <button onclick="document.getElementById('importFileInput').click()" class="secondary">📤 Import Data (JSON)</button>
                 </div>
                 <button onclick="resetProgress()" class="danger" style="margin-top: 1rem;">🔄 Reset Level & XP</button>
@@ -1300,45 +1281,27 @@
         <div class="modal-content">
             <div class="modal-header">Connect GitHub for Sync</div>
             <div style="background: rgba(0, 170, 255, 0.1); border: 1px solid var(--accent-blue); padding: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem;">
-                ℹ️ Sync your data across all devices using a private GitHub Gist. One-time setup!
+                ℹ️ Sync your data across all devices using a private GitHub Gist.
             </div>
             
             <div style="font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.8;">
                 <strong>Steps:</strong><br>
                 1. Go to: <a href="https://github.com/settings/tokens/new" target="_blank" style="color: var(--accent);">github.com/settings/tokens/new</a><br>
                 2. Note: "Financial Tracker Sync"<br>
-                3. Expiration: "No expiration"<br>
-                4. Check ONLY: <strong>✓ gist</strong><br>
-                5. Click "Generate token"<br>
-                6. Copy the token and paste below
+                3. Check ONLY: <strong>✓ gist</strong><br>
+                4. Click "Generate token"<br>
+                5. Copy and paste below
             </div>
             
             <div class="input-group">
                 <label>GitHub Personal Access Token</label>
-                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="font-family: monospace;" />
+                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
             </div>
             
-            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.5rem; margin-bottom: 1rem;">
-                🔒 Token is stored encrypted locally on your device only
-            </div>
-            
-            <!-- Storage Diagnostic -->
-            <div id="storageDiagnostic" style="font-size: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border: 1px solid var(--border); margin-bottom: 1rem; display: none;">
-                <strong>Storage Status:</strong><br>
-                <span id="storageStatus"></span>
-            </div>
-            <button onclick="testStorage()" class="secondary" style="width: 100%; margin-bottom: 1rem; font-size: 0.8rem;">🔍 Test Storage</button>
-            
-            <!-- Fix Gist ID -->
-            <div style="background: rgba(255, 51, 102, 0.1); border: 1px solid var(--accent-red); padding: 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
-                ⚠️ <strong>Devices not syncing?</strong><br>
-                Copy the Gist ID from your other device and paste it here:
-            </div>
             <div class="input-group">
-                <label>Gist ID (optional - to fix sync issues)</label>
-                <input type="text" id="fixGistId" placeholder="1da1da1effb209dde9bb43562f52b7c6" style="font-family: monospace; font-size: 0.8rem;" />
+                <label>Gist ID (optional - for existing gist)</label>
+                <input type="text" id="githubGistId" placeholder="Leave empty to create new" />
             </div>
-            <button onclick="fixGistId()" class="secondary" style="width: 100%; margin-bottom: 1rem; font-size: 0.8rem;">🔧 Use This Gist ID</button>
             
             <div class="modal-actions">
                 <button class="secondary" onclick="closeModal('githubSetupModal')">Cancel</button>
@@ -1347,80 +1310,131 @@
         </div>
     </div>
     
+    <!-- Cash Modal -->
     <div id="cashModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">Update Cash</div>
+            <div class="modal-header">Update Cash on Hand</div>
             <div class="input-group">
-                <label>Current Cash (RON)</label>
-                <input type="number" id="editCash" step="0.01" />
+                <label>New Amount (RON)</label>
+                <input type="number" id="newCashAmount" step="0.01" />
             </div>
             <div class="modal-actions">
                 <button class="secondary" onclick="closeModal('cashModal')">Cancel</button>
-                <button onclick="saveCash()">Save</button>
+                <button onclick="updateCash()">Update</button>
             </div>
         </div>
     </div>
 
+    <!-- Savings Modal -->
     <div id="savingsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">Update Savings</div>
             <div class="input-group">
-                <label>Current Savings (RON)</label>
-                <input type="number" id="editSavings" step="0.01" />
+                <label>New Amount (RON)</label>
+                <input type="number" id="newSavingsAmount" step="0.01" />
             </div>
             <div class="modal-actions">
                 <button class="secondary" onclick="closeModal('savingsModal')">Cancel</button>
-                <button onclick="saveSavings()">Save</button>
+                <button onclick="updateSavings()">Update</button>
             </div>
         </div>
     </div>
 
-    <div id="gasModal" class="modal">
+    <!-- Gas Level Modal -->
+    <div id="gasLevelModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">Fill Up Gas</div>
+            <div class="modal-header">Set Gas Tank Level</div>
             <div class="input-group">
-                <label>Liters Filled</label>
-                <input type="number" id="gasLiters" step="0.1" max="42" />
+                <label>Tank Level (%)</label>
+                <input type="number" id="gasLevelInput" min="0" max="100" step="1" />
             </div>
-            <div class="input-group">
-                <label>Total Cost (RON)</label>
-                <input type="number" id="gasCost" step="0.01" readonly />
-            </div>
-            <div style="background: var(--bg-secondary); padding: 1rem; margin: 1rem 0; font-size: 0.85rem;">
-                Current E95 Price: <strong id="modalGasPrice">9.02</strong> RON/L<br>
-                Tank will be: <strong id="newTankLevel">0%</strong> full
-            </div>
-            <script>
-                // Auto-calculate cost
-                document.getElementById('gasLiters').addEventListener('input', function() {
-                    const liters = parseFloat(this.value) || 0;
-                    const price = financialData.market.gasPrice;
-                    const cost = (liters * price).toFixed(2);
-                    document.getElementById('gasCost').value = cost;
-                    
-                    const currentLiters = (financialData.gasTank.currentPercent / 100) * financialData.gasTank.capacity;
-                    const newLiters = currentLiters + liters;
-                    const newPercent = Math.min((newLiters / financialData.gasTank.capacity * 100), 100).toFixed(0);
-                    document.getElementById('newTankLevel').textContent = newPercent + '%';
-                });
-            </script>
             <div class="modal-actions">
-                <button class="secondary" onclick="closeModal('gasModal')">Cancel</button>
-                <button onclick="fillGas()">Record Fill-Up</button>
+                <button class="secondary" onclick="closeModal('gasLevelModal')">Cancel</button>
+                <button onclick="setGasLevel()">Set Level</button>
             </div>
-            <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem;">
-                <div style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Or manually set gas level:</div>
-                <div class="input-group">
-                    <label>Set Gas Level (%)</label>
-                    <input type="number" id="manualGasLevel" min="0" max="100" step="1" placeholder="0-100%" />
-                </div>
-                <button onclick="setGasLevel()" class="secondary" style="width: 100%;">Set Level</button>
+        </div>
+    </div>
+
+    <!-- Add Subscription Modal -->
+    <div id="addSubscriptionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Add Subscription</div>
+            <div class="input-group">
+                <label>Name</label>
+                <input type="text" id="subName" placeholder="e.g., Netflix" />
+            </div>
+            <div class="input-group">
+                <label>Amount</label>
+                <input type="number" id="subAmount" step="0.01" />
+            </div>
+            <div class="input-group">
+                <label>Currency</label>
+                <select id="subCurrency">
+                    <option>RON</option>
+                    <option>EUR</option>
+                    <option>USD</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>
+                    <input type="checkbox" id="subActive" checked> Active
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeModal('addSubscriptionModal')">Cancel</button>
+                <button onclick="addSubscription()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Subscription Modal -->
+    <div id="editSubscriptionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Edit Subscription</div>
+            <input type="hidden" id="editSubIndex" />
+            <div class="input-group">
+                <label>Name</label>
+                <input type="text" id="editSubName" />
+            </div>
+            <div class="input-group">
+                <label>Amount</label>
+                <input type="number" id="editSubAmount" step="0.01" />
+            </div>
+            <div class="input-group">
+                <label>Currency</label>
+                <select id="editSubCurrency">
+                    <option>RON</option>
+                    <option>EUR</option>
+                    <option>USD</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>
+                    <input type="checkbox" id="editSubActive"> Active
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button class="secondary" onclick="closeModal('editSubscriptionModal')">Cancel</button>
+                <button onclick="saveSubscriptionEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Subscriptions Modal (for Dashboard) -->
+    <div id="manageSubscriptionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Manage Subscriptions</div>
+            <div id="manageSubscriptionsList">
+                <!-- Populated dynamically -->
+            </div>
+            <button onclick="openModal('addSubscriptionModal')" style="width: 100%; margin-top: 1rem;">+ Add New Subscription</button>
+            <div class="modal-actions">
+                <button onclick="closeModal('manageSubscriptionsModal')">Close</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Core Data Structure
         let financialData = {
             // Current State
             cash: 233,
@@ -3308,6 +3322,222 @@
         
         // Integrate GitHub sync into saveData
         // (Original saveData is in the main script section)
+
+        // ============================================
+        // SUBSCRIPTION MANAGEMENT
+        // ============================================
+        function updateSubscriptionsDisplay() {
+            // Dashboard subscriptions list
+            const dashList = document.getElementById('dashboardSubscriptionsList');
+            if (dashList) {
+                dashList.innerHTML = financialData.subscriptions.map(sub => {
+                    if (!sub.active) return '';
+                    const ronAmount = convertToRon(sub.amount, sub.currency);
+                    return `
+                        <div class="stat-row">
+                            <span class="stat-label">${sub.name}</span>
+                            <span class="stat-value">
+                                ${ronAmount.toFixed(2)} RON 
+                                <span style="color: var(--text-dim); font-size: 0.8rem;">(${sub.amount} ${sub.currency})</span>
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Total active subscriptions
+            const totalActive = financialData.subscriptions
+                .filter(sub => sub.active)
+                .reduce((sum, sub) => sum + convertToRon(sub.amount, sub.currency), 0);
+            
+            const totalEl = document.getElementById('dashTotalSubs');
+            if (totalEl) totalEl.textContent = totalActive.toFixed(2) + ' RON/mo';
+
+            // Settings subscriptions list
+            const settingsList = document.getElementById('subscriptionsList');
+            if (settingsList) {
+                if (financialData.subscriptions.length === 0) {
+                    settingsList.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 2rem;">No subscriptions yet</p>';
+                } else {
+                    settingsList.innerHTML = financialData.subscriptions.map((sub, index) => `
+                        <div class="subscription-item">
+                            <div>
+                                <div class="subscription-name">${sub.name}</div>
+                                <div class="subscription-amount">${sub.amount} ${sub.currency} / month</div>
+                                <span class="subscription-status ${sub.active ? 'active' : 'inactive'}">
+                                    ${sub.active ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                            <div class="subscription-actions">
+                                <button class="small" onclick="editSubscription(${index})">Edit</button>
+                                <button class="small secondary" onclick="toggleSubscription(${index})">
+                                    ${sub.active ? 'Deactivate' : 'Activate'}
+                                </button>
+                                <button class="small delete-btn" onclick="deleteSubscription(${index})">🗑️</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Manage modal list
+            const manageList = document.getElementById('manageSubscriptionsList');
+            if (manageList) {
+                if (financialData.subscriptions.length === 0) {
+                    manageList.innerHTML = '<p style="color: var(--text-dim); text-align: center; padding: 2rem;">No subscriptions yet</p>';
+                } else {
+                    manageList.innerHTML = financialData.subscriptions.map((sub, index) => `
+                        <div class="subscription-item">
+                            <div>
+                                <div class="subscription-name">${sub.name}</div>
+                                <div class="subscription-amount">${sub.amount} ${sub.currency} / month</div>
+                                <span class="subscription-status ${sub.active ? 'active' : 'inactive'}">
+                                    ${sub.active ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                            <div class="subscription-actions">
+                                <button class="small" onclick="editSubscription(${index}); closeModal('manageSubscriptionsModal');">Edit</button>
+                                <button class="small secondary" onclick="toggleSubscription(${index})">
+                                    ${sub.active ? 'Deactivate' : 'Activate'}
+                                </button>
+                                <button class="small delete-btn" onclick="deleteSubscription(${index})">🗑️</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        function convertToRon(amount, currency) {
+            if (currency === 'EUR') {
+                return amount * financialData.market.eurRon;
+            } else if (currency === 'USD') {
+                return amount * financialData.market.usdRon;
+            }
+            return amount; // RON
+        }
+
+        function addSubscription() {
+            const name = document.getElementById('subName').value.trim();
+            const amount = parseFloat(document.getElementById('subAmount').value);
+            const currency = document.getElementById('subCurrency').value;
+            const active = document.getElementById('subActive').checked;
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert('Please fill in all fields correctly');
+                return;
+            }
+
+            financialData.subscriptions.push({
+                name,
+                amount,
+                currency,
+                active
+            });
+
+            saveData();
+            updateSubscriptionsDisplay();
+            closeModal('addSubscriptionModal');
+            
+            // Reset form
+            document.getElementById('subName').value = '';
+            document.getElementById('subAmount').value = '';
+            document.getElementById('subCurrency').value = 'RON';
+            document.getElementById('subActive').checked = true;
+
+            console.log('✅ Subscription added:', name);
+        }
+
+        function editSubscription(index) {
+            const sub = financialData.subscriptions[index];
+            document.getElementById('editSubIndex').value = index;
+            document.getElementById('editSubName').value = sub.name;
+            document.getElementById('editSubAmount').value = sub.amount;
+            document.getElementById('editSubCurrency').value = sub.currency;
+            document.getElementById('editSubActive').checked = sub.active;
+            openModal('editSubscriptionModal');
+        }
+
+        function saveSubscriptionEdit() {
+            const index = parseInt(document.getElementById('editSubIndex').value);
+            const name = document.getElementById('editSubName').value.trim();
+            const amount = parseFloat(document.getElementById('editSubAmount').value);
+            const currency = document.getElementById('editSubCurrency').value;
+            const active = document.getElementById('editSubActive').checked;
+
+            if (!name || isNaN(amount) || amount <= 0) {
+                alert('Please fill in all fields correctly');
+                return;
+            }
+
+            financialData.subscriptions[index] = {
+                name,
+                amount,
+                currency,
+                active
+            };
+
+            saveData();
+            updateSubscriptionsDisplay();
+            closeModal('editSubscriptionModal');
+            console.log('✅ Subscription updated:', name);
+        }
+
+        function toggleSubscription(index) {
+            financialData.subscriptions[index].active = !financialData.subscriptions[index].active;
+            saveData();
+            updateSubscriptionsDisplay();
+            updateAllDisplays();
+        }
+
+        function deleteSubscription(index) {
+            const sub = financialData.subscriptions[index];
+            if (!confirm(`Delete subscription: ${sub.name}?`)) return;
+
+            financialData.subscriptions.splice(index, 1);
+            saveData();
+            updateSubscriptionsDisplay();
+            updateAllDisplays();
+            console.log('🗑️ Subscription deleted:', sub.name);
+        }
+
+        // Update gas price from settings
+        function updateGasPriceSettings() {
+            const newPrice = parseFloat(document.getElementById('settingsGasPrice').value);
+            if (isNaN(newPrice) || newPrice <= 0) {
+                alert('Please enter a valid gas price');
+                return;
+            }
+
+            financialData.market.gasPrice = newPrice;
+            saveData();
+            updateAllDisplays();
+            alert('✅ Gas price updated to ' + newPrice.toFixed(2) + ' RON/L');
+        }
+
+        // Update the file import handler
+        document.getElementById('importFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+                    if (confirm('This will overwrite all current data. Continue?')) {
+                        Object.assign(financialData, importedData);
+                        saveData();
+                        updateAllDisplays();
+                        alert('✅ Data imported successfully!');
+                    }
+                } catch (error) {
+                    alert('❌ Invalid file format');
+                    console.error('Import error:', error);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // Reset input
+        });
     </script>
 </body>
 </html>
